@@ -25,4 +25,4 @@ Events use descriptive topic symbols (e.g. `OrganizationRegistered`) so the fron
 ## Frontend data strategy
 
 - When contract IDs are configured, writes go on-chain and the activity feed polls testnet events.
-- When contract IDs are missing, the UI runs in demo mode with deterministic sample data so reviewers can explore every screen without wallets.
+- The console starts empty — no seeded tables or fake balances. Lists and charts fill only from real contract activity.

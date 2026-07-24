@@ -1,19 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  DEMO_ORGS,
-  DEMO_RELATIONSHIPS,
-  DEMO_REPUTATION,
-  DEMO_REVIEWS,
-} from "@/lib/demo-data";
 import type { Organization, Relationship, ReputationScore, Review } from "@/lib/types";
 
+/**
+ * On-chain trust graph state.
+ * Starts empty — data appears only after real contract reads / user actions.
+ */
 export function useTrustData() {
-  const [orgs] = useState<Organization[]>(DEMO_ORGS);
-  const [relationships] = useState<Relationship[]>(DEMO_RELATIONSHIPS);
-  const [reviews] = useState<Review[]>(DEMO_REVIEWS);
-  const [reputation] = useState<Record<number, ReputationScore>>(DEMO_REPUTATION);
+  const [orgs] = useState<Organization[]>([]);
+  const [relationships] = useState<Relationship[]>([]);
+  const [reviews] = useState<Review[]>([]);
+  const [reputation] = useState<Record<number, ReputationScore>>({});
 
   const stats = useMemo(() => {
     const verifiedOrgs = orgs.filter((o) => o.verified).length;
@@ -22,7 +20,11 @@ export function useTrustData() {
     const verifiedReviews = reviews.filter((r) => r.status === "Verified").length;
     const disputes = relationships.filter((r) => r.status === "Disputed").length;
     const avgTrust =
-      orgs.reduce((sum, o) => sum + (o.trustScore || 0), 0) / Math.max(orgs.length, 1);
+      orgs.length === 0
+        ? 0
+        : Math.round(
+            orgs.reduce((sum, o) => sum + (o.trustScore || 0), 0) / orgs.length,
+          );
     return {
       totalOrgs: orgs.length,
       verifiedOrgs,
@@ -30,7 +32,7 @@ export function useTrustData() {
       completedRels,
       verifiedReviews,
       disputes,
-      avgTrust: Math.round(avgTrust),
+      avgTrust,
     };
   }, [orgs, relationships, reviews]);
 

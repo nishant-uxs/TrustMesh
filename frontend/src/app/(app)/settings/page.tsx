@@ -36,7 +36,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-xl text-deep">Contracts</h2>
             <Badge tone={configured ? "success" : "warn"}>
-              {configured ? "Configured" : "Demo mode"}
+              {configured ? "Configured" : "Not configured"}
             </Badge>
           </div>
           <ul className="mt-4 space-y-3">

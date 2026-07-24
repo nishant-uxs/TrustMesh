@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
-import { Badge } from "@/components/ui/Badge";
+import { Badge, EmptyState } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner, TxStatus } from "@/components/ui/ErrorBanner";
 import { useTrustData } from "@/hooks/useTrustData";
@@ -16,11 +16,11 @@ import type { TxState } from "@/lib/types";
 export default function ReviewsPage() {
   const { reviews, orgs } = useTrustData();
   const { address, connect } = useWallet();
-  const [reviewerOrg, setReviewerOrg] = useState(1);
-  const [revieweeOrg, setRevieweeOrg] = useState(2);
-  const [relationshipId, setRelationshipId] = useState(1);
+  const [reviewerOrg, setReviewerOrg] = useState(0);
+  const [revieweeOrg, setRevieweeOrg] = useState(0);
+  const [relationshipId, setRelationshipId] = useState<number | "">("");
   const [rating, setRating] = useState(5);
-  const [commentHash, setCommentHash] = useState("sha256:trustmesh-review");
+  const [commentHash, setCommentHash] = useState("");
   const [tx, setTx] = useState<TxState>({ phase: "idle" });
   const [error, setError] = useState<ReturnType<typeof classifyError> | null>(null);
 
@@ -33,6 +33,10 @@ export default function ReviewsPage() {
       await connect();
       return;
     }
+    if (!reviewerOrg || !revieweeOrg || !relationshipId || !commentHash) {
+      setError(classifyError(new Error("contract: complete all review fields")));
+      return;
+    }
     if (!contractsConfigured()) {
       setError(classifyError(new Error("not configured: missing contract")));
       return;
@@ -43,11 +47,12 @@ export default function ReviewsPage() {
         address,
         reviewerOrg,
         revieweeOrg,
-        relationshipId,
+        Number(relationshipId),
         rating,
         commentHash,
       );
       setTx({ phase: "success", hash });
+      setCommentHash("");
     } catch (err) {
       const appErr = classifyError(err);
       setError(appErr);
@@ -64,47 +69,67 @@ export default function ReviewsPage() {
       <div className="grid gap-8 lg:grid-cols-5">
         <form onSubmit={onSubmit} className="tm-surface space-y-4 rounded-2xl p-5 lg:col-span-2">
           <h2 className="font-display text-xl text-deep">Submit review</h2>
-          <label className="block text-sm">
-            <span className="text-slate">Your organization</span>
-            <select
-              value={reviewerOrg}
-              onChange={(e) => setReviewerOrg(Number(e.target.value))}
-              className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5"
-            >
-              {orgs.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="text-slate">Reviewee</span>
-            <select
-              value={revieweeOrg}
-              onChange={(e) => setRevieweeOrg(Number(e.target.value))}
-              className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5"
-            >
-              {orgs.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {orgs.length < 2 ? (
+            <p className="text-sm text-slate">
+              Register organizations and complete a relationship before submitting a review.
+            </p>
+          ) : (
+            <>
+              <label className="block text-sm">
+                <span className="text-slate">Your organization</span>
+                <select
+                  required
+                  value={reviewerOrg || ""}
+                  onChange={(e) => setReviewerOrg(Number(e.target.value))}
+                  className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5"
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
+                  {orgs.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="text-slate">Reviewee</span>
+                <select
+                  required
+                  value={revieweeOrg || ""}
+                  onChange={(e) => setRevieweeOrg(Number(e.target.value))}
+                  className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5"
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
+                  {orgs.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
           <label className="block text-sm">
             <span className="text-slate">Relationship ID</span>
             <input
+              required
               type="number"
               min={1}
               value={relationshipId}
-              onChange={(e) => setRelationshipId(Number(e.target.value))}
+              onChange={(e) =>
+                setRelationshipId(e.target.value === "" ? "" : Number(e.target.value))
+              }
               className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5"
             />
           </label>
           <label className="block text-sm">
             <span className="text-slate">Rating (1–5)</span>
             <input
+              required
               type="number"
               min={1}
               max={5}
@@ -116,12 +141,19 @@ export default function ReviewsPage() {
           <label className="block text-sm">
             <span className="text-slate">Comment hash</span>
             <input
+              required
+              minLength={8}
               value={commentHash}
               onChange={(e) => setCommentHash(e.target.value)}
               className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5"
             />
           </label>
-          <Button type="submit" className="w-full" loading={tx.phase === "signing"}>
+          <Button
+            type="submit"
+            className="w-full"
+            loading={tx.phase === "signing"}
+            disabled={orgs.length < 2}
+          >
             Submit review
           </Button>
           <TxStatus phase={tx.phase} hash={tx.hash} />
@@ -129,29 +161,38 @@ export default function ReviewsPage() {
         </form>
 
         <div className="space-y-3 lg:col-span-3">
-          {reviews.map((review) => (
-            <article key={review.id} className="tm-surface rounded-2xl p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium text-deep">
-                  {orgName(review.reviewerOrg)} → {orgName(review.revieweeOrg)}
-                </p>
-                <Badge
-                  tone={
-                    review.status === "Verified"
-                      ? "success"
-                      : review.status === "Rejected"
-                        ? "danger"
-                        : "warn"
-                  }
-                >
-                  {review.status}
-                </Badge>
-              </div>
-              <p className="mt-2 text-2xl text-amber">{"★".repeat(review.rating)}</p>
-              <p className="mt-1 font-mono text-xs text-slate">{review.commentHash}</p>
-              <p className="mt-2 text-xs text-slate">{timeAgo(review.submittedAt)}</p>
-            </article>
-          ))}
+          {reviews.length === 0 ? (
+            <div className="tm-surface rounded-2xl">
+              <EmptyState
+                title="No reviews yet"
+                description="Verified and submitted reviews from the chain will show here."
+              />
+            </div>
+          ) : (
+            reviews.map((review) => (
+              <article key={review.id} className="tm-surface rounded-2xl p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium text-deep">
+                    {orgName(review.reviewerOrg)} → {orgName(review.revieweeOrg)}
+                  </p>
+                  <Badge
+                    tone={
+                      review.status === "Verified"
+                        ? "success"
+                        : review.status === "Rejected"
+                          ? "danger"
+                          : "warn"
+                    }
+                  >
+                    {review.status}
+                  </Badge>
+                </div>
+                <p className="mt-2 text-2xl text-amber">{"★".repeat(review.rating)}</p>
+                <p className="mt-1 font-mono text-xs text-slate">{review.commentHash}</p>
+                <p className="mt-2 text-xs text-slate">{timeAgo(review.submittedAt)}</p>
+              </article>
+            ))
+          )}
         </div>
       </div>
     </div>

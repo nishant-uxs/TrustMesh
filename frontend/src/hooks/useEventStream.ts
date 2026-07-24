@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { contractsConfigured } from "@/lib/config";
 import { fetchContractEvents, type RawEvent } from "@/lib/contracts";
-import { DEMO_ACTIVITY } from "@/lib/demo-data";
 import type { ActivityEvent } from "@/lib/types";
 
 function toActivity(ev: RawEvent): ActivityEvent {
@@ -22,7 +21,7 @@ function toActivity(ev: RawEvent): ActivityEvent {
 }
 
 export function useEventStream(pollMs = 5000) {
-  const [events, setEvents] = useState<ActivityEvent[]>(DEMO_ACTIVITY);
+  const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const cursor = useRef<number | undefined>(undefined);
@@ -30,7 +29,7 @@ export function useEventStream(pollMs = 5000) {
 
   const refresh = useCallback(async () => {
     if (!contractsConfigured()) {
-      setEvents(DEMO_ACTIVITY);
+      setEvents([]);
       setLive(false);
       setLoading(false);
       return;
@@ -47,9 +46,6 @@ export function useEventStream(pollMs = 5000) {
         .map(toActivity);
       if (fresh.length) {
         setEvents((prev) => [...fresh, ...prev].slice(0, 100));
-      } else if (loading) {
-        // Keep demo until first real events arrive
-        setEvents((prev) => (prev.length ? prev : DEMO_ACTIVITY));
       }
       setLive(true);
     } catch {
@@ -57,7 +53,7 @@ export function useEventStream(pollMs = 5000) {
     } finally {
       setLoading(false);
     }
-  }, [loading]);
+  }, []);
 
   useEffect(() => {
     refresh();

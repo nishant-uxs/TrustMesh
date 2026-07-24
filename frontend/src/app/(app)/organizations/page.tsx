@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
-import { Badge } from "@/components/ui/Badge";
+import { Badge, EmptyState } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner, TxStatus } from "@/components/ui/ErrorBanner";
 import { useTrustData } from "@/hooks/useTrustData";
@@ -27,7 +27,7 @@ export default function OrganizationsPage() {
   const { address, connect } = useWallet();
   const [name, setName] = useState("");
   const [orgType, setOrgType] = useState<OrgType>("Business");
-  const [uri, setUri] = useState("ipfs://trustmesh-org");
+  const [uri, setUri] = useState("");
   const [tx, setTx] = useState<TxState>({ phase: "idle" });
   const [error, setError] = useState<ReturnType<typeof classifyError> | null>(null);
 
@@ -80,7 +80,6 @@ export default function OrganizationsPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5 outline-none focus:border-sea"
-              placeholder="Acme Logistics"
             />
           </label>
           <label className="block text-sm">
@@ -100,6 +99,7 @@ export default function OrganizationsPage() {
           <label className="block text-sm">
             <span className="text-slate">Metadata URI</span>
             <input
+              required
               value={uri}
               onChange={(e) => setUri(e.target.value)}
               className="mt-1 w-full rounded-xl border border-deep/15 bg-white px-3 py-2.5 outline-none focus:border-sea"
@@ -117,33 +117,42 @@ export default function OrganizationsPage() {
         </form>
 
         <div className="space-y-3 lg:col-span-3">
-          {orgs.map((org, i) => (
-            <Link
-              key={org.id}
-              href={`/profile/${org.id}`}
-              className="tm-surface block rounded-2xl p-5 transition hover:border-sea/30 animate-fade-up"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-display text-xl text-deep">{org.name}</h3>
-                  <p className="mt-1 text-sm text-slate">
-                    {org.orgType} · {org.vendorCount} vendors
-                  </p>
+          {orgs.length === 0 ? (
+            <div className="tm-surface rounded-2xl">
+              <EmptyState
+                title="No organizations registered"
+                description="Submit the form to register your organization on Stellar Testnet."
+              />
+            </div>
+          ) : (
+            orgs.map((org, i) => (
+              <Link
+                key={org.id}
+                href={`/profile/${org.id}`}
+                className="tm-surface block rounded-2xl p-5 transition hover:border-sea/30 animate-fade-up"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-display text-xl text-deep">{org.name}</h3>
+                    <p className="mt-1 text-sm text-slate">
+                      {org.orgType} · {org.vendorCount} vendors
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {org.verified ? (
+                      <Badge tone="success">Verified</Badge>
+                    ) : (
+                      <Badge tone="warn">Pending</Badge>
+                    )}
+                    <span className="rounded-lg bg-foam px-2 py-1 font-mono text-sm text-deep">
+                      {org.trustScore ?? 0}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {org.verified ? (
-                    <Badge tone="success">Verified</Badge>
-                  ) : (
-                    <Badge tone="warn">Pending</Badge>
-                  )}
-                  <span className="rounded-lg bg-foam px-2 py-1 font-mono text-sm text-deep">
-                    {org.trustScore}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { TopBar } from "@/components/layout/TopBar";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/Badge";
 import { useTrustData } from "@/hooks/useTrustData";
 import { formatScore } from "@/lib/format";
 
@@ -14,7 +15,7 @@ export default function DashboardPage() {
     { label: "Organizations", value: stats.totalOrgs, hint: `${stats.verifiedOrgs} verified` },
     { label: "Active relationships", value: stats.activeRels, hint: `${stats.completedRels} completed` },
     { label: "Verified reviews", value: stats.verifiedReviews, hint: `${stats.disputes} open disputes` },
-    { label: "Avg trust score", value: formatScore(stats.avgTrust), hint: "Network baseline" },
+    { label: "Avg trust score", value: formatScore(stats.avgTrust), hint: "From on-chain reputation" },
   ];
 
   return (
@@ -45,56 +46,74 @@ export default function DashboardPage() {
               View all
             </Link>
           </div>
-          <div className="space-y-3">
-            {orgs.slice(0, 4).map((org) => (
-              <Link
-                key={org.id}
-                href={`/profile/${org.id}`}
-                className="tm-surface flex items-center justify-between rounded-2xl p-4 transition hover:border-sea/30"
-              >
-                <div>
-                  <p className="font-medium text-deep">{org.name}</p>
-                  <p className="text-xs text-slate">{org.orgType}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {org.verified ? (
-                    <Badge tone="success">Verified</Badge>
-                  ) : (
-                    <Badge>Unverified</Badge>
-                  )}
-                  <span className="font-mono text-sm text-deep">{org.trustScore}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {orgs.length === 0 ? (
+            <div className="tm-surface rounded-2xl">
+              <EmptyState
+                title="No organizations yet"
+                description="Register an organization on-chain to populate this list."
+              />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {orgs.slice(0, 4).map((org) => (
+                <Link
+                  key={org.id}
+                  href={`/profile/${org.id}`}
+                  className="tm-surface flex items-center justify-between rounded-2xl p-4 transition hover:border-sea/30"
+                >
+                  <div>
+                    <p className="font-medium text-deep">{org.name}</p>
+                    <p className="text-xs text-slate">{org.orgType}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {org.verified ? (
+                      <Badge tone="success">Verified</Badge>
+                    ) : (
+                      <Badge>Unverified</Badge>
+                    )}
+                    <span className="font-mono text-sm text-deep">{org.trustScore ?? 0}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="mt-8">
             <h2 className="mb-4 font-display text-2xl text-deep">Relationship pulse</h2>
-            <div className="space-y-3">
-              {relationships.map((rel) => (
-                <div key={rel.id} className="tm-surface rounded-2xl p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-deep">{rel.title}</p>
-                    <Badge
-                      tone={
-                        rel.status === "Completed"
-                          ? "success"
-                          : rel.status === "Disputed"
-                            ? "danger"
-                            : rel.status === "Active"
-                              ? "info"
-                              : "neutral"
-                      }
-                    >
-                      {rel.status}
-                    </Badge>
+            {relationships.length === 0 ? (
+              <div className="tm-surface rounded-2xl">
+                <EmptyState
+                  title="No relationships yet"
+                  description="Create a trust relationship between two registered organizations."
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {relationships.map((rel) => (
+                  <div key={rel.id} className="tm-surface rounded-2xl p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-medium text-deep">{rel.title}</p>
+                      <Badge
+                        tone={
+                          rel.status === "Completed"
+                            ? "success"
+                            : rel.status === "Disputed"
+                              ? "danger"
+                              : rel.status === "Active"
+                                ? "info"
+                                : "neutral"
+                        }
+                      >
+                        {rel.status}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-slate">
+                      Org #{rel.orgA} ↔ Org #{rel.orgB}
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-slate">
-                    Org #{rel.orgA} ↔ Org #{rel.orgB}
-                  </p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/Badge";
-import { Skeleton } from "@/components/ui/Badge";
+import { EmptyState, Skeleton } from "@/components/ui/Badge";
 import { useEventStream } from "@/hooks/useEventStream";
 import { explorerTxUrl, timeAgo } from "@/lib/format";
 
@@ -31,13 +31,22 @@ export function ActivityFeed({ limit = 12 }: { limit?: number }) {
     );
   }
 
+  if (!events.length) {
+    return (
+      <EmptyState
+        title="No on-chain activity yet"
+        description="Events appear here when organizations register, relationships form, reviews verify, or trust scores update on Testnet."
+      />
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="mb-2 flex items-center gap-2 text-xs text-slate">
         <span
           className={`h-2 w-2 rounded-full ${live ? "bg-mint animate-pulse-dot" : "bg-slate"}`}
         />
-        {live ? "Live event stream" : "Demo activity feed"}
+        {live ? "Live event stream" : "Waiting for RPC"}
       </div>
       {events.slice(0, limit).map((ev, idx) => (
         <article
