@@ -1,0 +1,85 @@
+"use client";
+
+import { TopBar } from "@/components/layout/TopBar";
+import { useTrustData } from "@/hooks/useTrustData";
+import { formatScore } from "@/lib/format";
+
+export default function AnalyticsPage() {
+  const { stats, orgs, relationships, reviews, reputation } = useTrustData();
+
+  const byType = orgs.reduce<Record<string, number>>((acc, org) => {
+    acc[org.orgType] = (acc[org.orgType] || 0) + 1;
+    return acc;
+  }, {});
+
+  const statusCounts = relationships.reduce<Record<string, number>>((acc, rel) => {
+    acc[rel.status] = (acc[rel.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  const maxType = Math.max(...Object.values(byType), 1);
+  const disputeRate =
+    Object.values(reputation).reduce((s, r) => s + r.disputesOpened, 0) /
+    Math.max(relationships.length, 1);
+
+  return (
+    <div>
+      <TopBar
+        title="Analytics"
+        subtitle="Network composition, relationship outcomes, and trust distribution."
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: "Verification rate", value: `${Math.round((stats.verifiedOrgs / stats.totalOrgs) * 100)}%` },
+          { label: "Completion rate", value: `${Math.round((stats.completedRels / Math.max(relationships.length, 1)) * 100)}%` },
+          { label: "Avg trust", value: formatScore(stats.avgTrust) },
+          { label: "Dispute intensity", value: disputeRate.toFixed(2) },
+        ].map((item) => (
+          <div key={item.label} className="tm-surface rounded-2xl p-5">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate">{item.label}</p>
+            <p className="mt-3 font-display text-3xl text-deep">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-2">
+        <section className="tm-surface rounded-2xl p-6">
+          <h2 className="font-display text-2xl text-deep">Organizations by type</h2>
+          <div className="mt-6 space-y-4">
+            {Object.entries(byType).map(([type, count]) => (
+              <div key={type}>
+                <div className="mb-1 flex justify-between text-sm">
+                  <span className="text-deep">{type}</span>
+                  <span className="text-slate">{count}</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-deep/10">
+                  <div
+                    className="h-full rounded-full bg-sea"
+                    style={{ width: `${(count / maxType) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="tm-surface rounded-2xl p-6">
+          <h2 className="font-display text-2xl text-deep">Relationship outcomes</h2>
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            {Object.entries(statusCounts).map(([status, count]) => (
+              <div key={status} className="rounded-xl bg-foam/70 p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate">{status}</p>
+                <p className="mt-2 font-display text-3xl text-deep">{count}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-slate">
+            {reviews.filter((r) => r.status === "Verified").length} verified reviews across{" "}
+            {orgs.length} organizations on the TrustMesh graph.
+          </p>
+        </section>
+      </div>
+    </div>
+  );
+}
