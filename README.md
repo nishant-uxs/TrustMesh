@@ -8,7 +8,7 @@ TrustMesh lets businesses, startups, agencies, freelancers, vendors, and service
 
 This is **not** crowdfunding, escrow, NFTs, a DAO, CRM, or LinkedIn — it is decentralized trust infrastructure.
 
-[![CI](https://github.com/agarwalnishant812/trustmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/agarwalnishant812/trustmesh/actions/workflows/ci.yml)
+[![CI](https://github.com/nishant-uxs/TrustMesh/actions/workflows/ci.yml/badge.svg)](https://github.com/nishant-uxs/TrustMesh/actions/workflows/ci.yml)
 
 ---
 
