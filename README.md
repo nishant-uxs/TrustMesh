@@ -1,107 +1,169 @@
 # TrustMesh
 
-> Decentralized Business Trust & Reputation Network on Stellar Soroban.
+**Decentralized business trust & reputation on Stellar Soroban.**
 
-**Stellar Journey to Mastery — Level 3 Orange Belt submission.**
+TrustMesh is trust infrastructure for businesses, startups, agencies, freelancers, vendors, and service providers — not crowdfunding, not escrow, not NFTs, not a DAO, not CRM, and not LinkedIn.
 
-TrustMesh lets businesses, startups, agencies, freelancers, vendors, and service providers establish **verifiable trust** through completed projects, business relationships, verified reviews, dispute history, reputation scores, and immutable on-chain records.
+Organizations establish **verifiable trust** through completed relationships, verified reviews, dispute history, reputation scores, and immutable on-chain records.
 
-This is **not** crowdfunding, escrow, NFTs, a DAO, CRM, or LinkedIn — it is decentralized trust infrastructure.
+Built for the **Stellar Journey to Mastery — Orange Belt**.
 
 [![CI](https://github.com/nishant-uxs/TrustMesh/actions/workflows/ci.yml/badge.svg)](https://github.com/nishant-uxs/TrustMesh/actions/workflows/ci.yml)
 
 ---
 
-## Architecture
+## Live demo & submission
 
+| | Link |
+|---|---|
+| **GitHub repo** | https://github.com/nishant-uxs/TrustMesh |
+| **CI/CD** | https://github.com/nishant-uxs/TrustMesh/actions |
+| **First deploy tx (testnet)** | https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0 |
+| **Sample register tx** | https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24 |
+| **Sample verify tx** | https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76 |
+| **Demo video** | _add Loom / Drive link after recording_ |
+| **Live app (Vercel)** | _add after deploy_ |
+
+Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md) · env: [`deployments/testnet.env`](./deployments/testnet.env)
+
+---
+
+## Why it stands out
+
+- **Six cooperating Soroban contracts** with explicit admin + authorized-caller boundaries
+- **Factory orchestration** that talks to registry, relationship, reputation, and treasury in one flow
+- **Reputation scoring** from completions, verified reviews, and dispute outcomes
+- **Wallet picker on connect** (Freighter / xBull / LOBSTR / Albedo / Hana / Rabet)
+- **Freighter-signed invokes** for register / relationships / reviews (real Testnet txs)
+- **Empty-by-default console** — no seed tables, no fake balances
+- **Live Testnet deployment** with contract IDs + transaction hashes
+- **Event streaming** via RPC `getEvents` into a live activity timeline
+
+---
+
+## System architecture
+
+```mermaid
+flowchart TB
+  subgraph Clients
+    UI[Next.js Console]
+    Wallets[Freighter / xBull / LOBSTR / Albedo]
+  end
+
+  subgraph Soroban["Stellar Testnet · Soroban"]
+    REG[Organization Registry]
+    FAC[Trust Relationship Factory]
+    REL[Trust Relationship]
+    REV[Review Verification]
+    REP[Reputation]
+    TR[Treasury]
+  end
+
+  UI --> Wallets
+  UI --> REG
+  UI --> FAC
+  UI --> REL
+  UI --> REV
+  UI --> REP
+  UI --> TR
+
+  FAC -->|get_organization| REG
+  FAC -->|create| REL
+  FAC -->|ensure_tracked| REP
+  FAC -->|record_fee| TR
+  REL -->|record_completed / dispute| REP
+  REV -->|get_organization| REG
+  REV -->|record_verified_review| REP
+  REV -->|record_fee| TR
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                     Next.js Frontend (TypeScript + Tailwind)             │
-│  Wallet Kit → Contract calls → RPC getEvents activity stream (5s poll)   │
-└────────────────────────────────┬─────────────────────────────────────────┘
-                                 │
-     ┌───────────────────────────┼───────────────────────────┐
-     ▼                           ▼                           ▼
-┌──────────────┐   ┌─────────────────────┐   ┌──────────────────────┐
-│ Organization │   │ Trust Relationship  │   │ Review Verification  │
-│ Registry     │◄──│ Factory             │──►│                      │
-└──────┬───────┘   └──────────┬──────────┘   └──────────┬───────────┘
-       │                      │                         │
-       │           ┌──────────▼──────────┐              │
-       │           │ Trust Relationship  │──────────────┤
-       │           └──────────┬──────────┘              │
-       │                      │                         │
-       │           ┌──────────▼──────────┐   ┌──────────▼───────────┐
-       └──────────►│ Reputation          │◄──┤ Treasury (fees)      │
-                   └─────────────────────┘   └──────────────────────┘
+
+### Trust lifecycle
+
+```mermaid
+sequenceDiagram
+  participant Owner
+  participant Admin
+  participant Registry as Organization Registry
+  participant Factory as Relationship Factory
+  participant Rel as Trust Relationship
+  participant Reviews as Review Verification
+  participant Rep as Reputation
+  participant Treasury
+
+  Owner->>Registry: register_organization
+  Admin->>Registry: verify_organization
+  Owner->>Factory: create_relationship
+  Factory->>Registry: get_organization
+  Factory->>Rel: create
+  Factory->>Rep: ensure_tracked
+  Factory->>Treasury: record_fee
+  Owner->>Rel: accept
+  Owner->>Rel: complete
+  Rel->>Rep: record_completed_relationship
+  Owner->>Reviews: submit_review
+  Reviews->>Treasury: record_fee
+  Admin->>Reviews: verify_review
+  Reviews->>Rep: record_verified_review
 ```
 
-### Cross-contract communication
+### Authorization model
 
-| Caller | Callee | Purpose |
+```mermaid
+flowchart LR
+  Admin -->|initialize / set_authorized| AllContracts
+  Factory -->|create| Relationship
+  Factory -->|ensure_tracked| Reputation
+  Factory -->|record_fee| Treasury
+  Relationship -->|score updates| Reputation
+  Reviews -->|record_verified_review| Reputation
+  Reviews -->|record_fee| Treasury
+  Owner -->|register / accept / submit| RegistryRelReviews
+```
+
+---
+
+## Smart contracts
+
+| Contract | ID (testnet) | Role |
 |---|---|---|
-| Factory | Organization Registry | Validate org ownership before creating a relationship |
-| Factory | Trust Relationship | Create relationship records |
-| Factory | Reputation | Ensure both orgs are reputation-tracked |
-| Factory | Treasury | Record relationship platform fee |
-| Trust Relationship | Reputation | Update scores on completion / dispute resolution |
-| Review Verification | Organization Registry | Validate reviewer ownership |
-| Review Verification | Reputation | Apply verified review ratings |
-| Review Verification | Treasury | Record review platform fee |
+| Organization Registry | [`CD6AAYZ7…NRZT`](https://stellar.expert/explorer/testnet/contract/CD6AAYZ7IVW6SQDP6NRKRZ3QIRQQPB3ZDRKTSA7ZBU2VRWN4VM4ZNRZT) | Register / verify orgs + vendors |
+| Reputation | [`CDYSM4LG…RBL5`](https://stellar.expert/explorer/testnet/contract/CDYSM4LG4OUPSXGDDSJMZK7H532223GNBAF6I5RAYAFG74HD5QRPRBL5) | Trust scores from reviews & completions |
+| Treasury | [`CA63C3PL…MONH`](https://stellar.expert/explorer/testnet/contract/CA63C3PLR2GQRNLES6JO72YPFO6HWUYLVWFPZBNY47BRZPYSPUGWMONH) | Fee config, deposits, fee accounting |
+| Trust Relationship | [`CBCTIWGK…LDXJ`](https://stellar.expert/explorer/testnet/contract/CBCTIWGKIIGMDMJNPGT4OLVITGTVTW3JFTMHKYBOT42ENZZWEITJLDXJ) | Lifecycle, disputes, completion |
+| Trust Relationship Factory | [`CBF5KOXX…JGHK`](https://stellar.expert/explorer/testnet/contract/CBF5KOXX34HEF3Q6ECLWQY543V53HJRJ25W5X3DO6O2XII4GP2FHJGHK) | Cross-contract relationship orchestration |
+| Review Verification | [`CBXOCI2B…J3KF`](https://stellar.expert/explorer/testnet/contract/CBXOCI2BQTCDUJOVJCAC7TQLBA5HNGVU7UQ5JDLJF44ZHOZBG4PLJ3KF) | Submit / verify / reject reviews |
 
-### Events streamed to the UI
+**First deploy transaction:**  
+`384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0`  
+Explorer: https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0
+
+### Events emitted
 
 `OrganizationRegistered` · `OrganizationVerified` · `RelationshipCreated` · `RelationshipCompleted` · `ReviewSubmitted` · `ReviewVerified` · `ReputationUpdated` · `TrustScoreUpdated` · `DisputeOpened` · `DisputeResolved`
 
 ---
 
-## Deployed contracts (Stellar Testnet)
+## Repository layout
 
-| Contract | Address | Explorer |
-|---|---|---|
-| Organization Registry | `CD6AAYZ7IVW6SQDP6NRKRZ3QIRQQPB3ZDRKTSA7ZBU2VRWN4VM4ZNRZT` | [view](https://stellar.expert/explorer/testnet/contract/CD6AAYZ7IVW6SQDP6NRKRZ3QIRQQPB3ZDRKTSA7ZBU2VRWN4VM4ZNRZT) |
-| Reputation | `CDYSM4LG4OUPSXGDDSJMZK7H532223GNBAF6I5RAYAFG74HD5QRPRBL5` | [view](https://stellar.expert/explorer/testnet/contract/CDYSM4LG4OUPSXGDDSJMZK7H532223GNBAF6I5RAYAFG74HD5QRPRBL5) |
-| Treasury | `CA63C3PLR2GQRNLES6JO72YPFO6HWUYLVWFPZBNY47BRZPYSPUGWMONH` | [view](https://stellar.expert/explorer/testnet/contract/CA63C3PLR2GQRNLES6JO72YPFO6HWUYLVWFPZBNY47BRZPYSPUGWMONH) |
-| Trust Relationship | `CBCTIWGKIIGMDMJNPGT4OLVITGTVTW3JFTMHKYBOT42ENZZWEITJLDXJ` | [view](https://stellar.expert/explorer/testnet/contract/CBCTIWGKIIGMDMJNPGT4OLVITGTVTW3JFTMHKYBOT42ENZZWEITJLDXJ) |
-| Trust Relationship Factory | `CBF5KOXX34HEF3Q6ECLWQY543V53HJRJ25W5X3DO6O2XII4GP2FHJGHK` | [view](https://stellar.expert/explorer/testnet/contract/CBF5KOXX34HEF3Q6ECLWQY543V53HJRJ25W5X3DO6O2XII4GP2FHJGHK) |
-| Review Verification | `CBXOCI2BQTCDUJOVJCAC7TQLBA5HNGVU7UQ5JDLJF44ZHOZBG4PLJ3KF` | [view](https://stellar.expert/explorer/testnet/contract/CBXOCI2BQTCDUJOVJCAC7TQLBA5HNGVU7UQ5JDLJF44ZHOZBG4PLJ3KF) |
+```
+.
+├── contracts/                 # Soroban workspace (6 crates + tests)
+├── frontend/                  # Next.js 15 · TypeScript · Tailwind
+├── scripts/                   # deploy.sh + deploy.ps1
+├── deployments/               # Live testnet addresses + tx hashes
+├── docs/                      # Architecture + demo notes
+├── .github/workflows/ci.yml   # cargo test ‖ npm test/lint/build
+└── README.md
+```
 
-### Verifiable sample flow
+### CI/CD pipeline
 
-| Action | Tx |
-|---|---|
-| `register_organization` → `OrganizationRegistered` | [`fa96bc2e…0a24`](https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24) |
-| `verify_organization` → `OrganizationVerified` | [`be97ac73…8d76`](https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76) |
+Every push / PR on `master` runs parallel jobs:
 
-Full deploy + init hashes: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md)
+1. **Contracts** — `cargo test --workspace`
+2. **Frontend** — `npm ci` → `npm test` → `npm run lint` → `npm run build`
 
----
-
-## Features
-
-- Organization onboarding & vendor registration
-- Business relationship lifecycle (create → accept → complete / dispute)
-- Verified reviews with reputation updates
-- Trust scores & public organization profiles
-- Live activity timeline from contract events
-- Analytics dashboard
-- Multi-wallet authentication (Freighter, xBull, Albedo, LOBSTR, Hana)
-- Responsive desktop / tablet / mobile UI
-- Structured loading states & classified error handling
-
----
-
-## Tech stack
-
-| Layer | Tech |
-|---|---|
-| Contracts | Rust + soroban-sdk 25 |
-| Build / deploy | stellar-cli 25 + `scripts/deploy.sh` |
-| Frontend | Next.js 15 + TypeScript + Tailwind CSS 4 |
-| Wallets | `@creit.tech/stellar-wallets-kit` |
-| RPC | `@stellar/stellar-sdk` → `soroban-testnet.stellar.org` |
-| Tests | cargo test (33) · Vitest (frontend) |
-| CI/CD | GitHub Actions |
+CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)
 
 ---
 
@@ -109,73 +171,115 @@ Full deploy + init hashes: [`deployments/TRANSACTIONS.md`](./deployments/TRANSAC
 
 ### Prerequisites
 
-- Node.js ≥ 20
-- Rust + `wasm32v1-none` target
-- stellar-cli ≥ 22
-- Funded Testnet identity: `stellar keys generate trustmesh-admin --network testnet --fund`
+- Rust stable + wasm target (`wasm32v1-none`)
+- [Stellar CLI](https://developers.stellar.org/docs/tools/cli) v25+
+- Node.js 20+
 
 ### Contracts
 
 ```bash
 cargo test --workspace
 stellar contract build
-./scripts/deploy.sh --source trustmesh-admin --network testnet
+
+# Windows
+.\scripts\deploy.ps1 -Source deployer -Network testnet
+# macOS / Linux
+bash scripts/deploy.sh --source deployer --network testnet
 ```
 
 ### Frontend
 
 ```bash
 cd frontend
-cp .env.example .env.local   # or copy deployments/testnet.env
+cp ../deployments/testnet.env .env.local
+# or: cp .env.example .env.local
 npm install
-npm test
 npm run dev
 ```
 
 Open http://localhost:3000
 
-### Production build
+### Redeploy (optional)
 
 ```bash
-cd frontend && npm run build && npm start
+stellar keys fund deployer --network testnet
+.\scripts\deploy.ps1 -Source deployer -Network testnet
+```
+
+Then refresh `frontend/.env.local` from `deployments/testnet.env`.
+
+---
+
+## Frontend
+
+Pages: Landing · Dashboard · Organizations · Relationships · Reputation · Reviews · Analytics · Activity · Public Profile · Settings
+
+Quality bar:
+
+- Multi-wallet connect modal
+- Skeletons + empty states (no fake seed data)
+- Classified wallet / RPC / contract errors
+- Transaction status phases (simulate → sign → confirm)
+- Live activity feed from contract events
+- Settings panel with linked Testnet contract IDs
+- Responsive desktop / tablet / mobile layout
+
+---
+
+## Testing
+
+```bash
+# 33 smart-contract tests
+cargo test --workspace
+
+# Frontend
+cd frontend
+npm run lint
+npm test
+npm run build
 ```
 
 ---
 
-## Project structure
+## Demo video
 
-```
-.
-├── contracts/
-│   ├── organization_registry/
-│   ├── reputation/
-│   ├── treasury/
-│   ├── trust_relationship/
-│   ├── trust_relationship_factory/
-│   └── review_verification/
-├── frontend/                 Next.js app
-├── scripts/deploy.sh         One-shot Testnet deploy + init + auth wiring
-├── deployments/              Generated addresses & tx hashes
-└── .github/workflows/ci.yml
-```
+**Watch:** _add link after recording_
+
+Recording script: [`docs/DEMO_VIDEO.md`](./docs/DEMO_VIDEO.md)
+
+Suggested 90s flow: landing → wallet connect → Settings (contract IDs) → register organization (sign) → Stellar Expert tx → Activity.
 
 ---
 
 ## Orange Belt checklist
 
-- [x] Advanced Soroban smart contracts (auth, state machines, scoring)
+Mapped requirement → implementation: [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/ORANGE_BELT_CHECKLIST.md)
+
+- [x] Advanced Soroban smart contracts
 - [x] Multiple smart contracts (6)
 - [x] Contract-to-contract communication
-- [x] Event streaming (RPC `getEvents` → live activity feed)
+- [x] Event streaming
 - [x] Production architecture
-- [x] Responsive frontend + mobile support
+- [x] Responsive frontend + mobile
 - [x] Error handling + loading states
 - [x] Smart contract testing
 - [x] Frontend testing
-- [x] CI/CD (GitHub Actions)
+- [x] CI/CD
 - [x] Deployment scripts
 - [x] Production documentation
-- [x] Stellar Testnet deployment artifacts
+- [x] Stellar Testnet deployment
+
+---
+
+## Security notes
+
+- Admin-only `initialize` / `set_authorized` / `verify_*` / dispute resolution
+- Factory-only relationship creation entry (plus admin)
+- Reputation + Treasury gated by authorized contract callers
+- Reviewer must own the reviewer organization
+- Creator must own one side of a relationship
+- Self-review blocked; duplicate pair reviews blocked
+- Empty-by-default UI — no fabricated balances or seed tables
 
 ---
 
