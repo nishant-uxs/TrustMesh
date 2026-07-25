@@ -17,7 +17,7 @@ Built for the **Stellar Journey to Mastery — Orange Belt**.
 | | Link |
 |---|---|
 | **GitHub repo** | https://github.com/nishant-uxs/TrustMesh |
-| **CI/CD** | https://github.com/nishant-uxs/TrustMesh/actions |
+| **Green CI/CD run** | https://github.com/nishant-uxs/TrustMesh/actions/runs/30162067608 |
 | **First deploy tx (testnet)** | https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0 |
 | **Sample register tx** | https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24 |
 | **Sample verify tx** | https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76 |
@@ -163,7 +163,8 @@ Every push / PR on `master` runs parallel jobs:
 1. **Contracts** — `cargo test --workspace`
 2. **Frontend** — `npm ci` → `npm test` → `npm run lint` → `npm run build`
 
-CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)
+CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)  
+**Latest green run:** https://github.com/nishant-uxs/TrustMesh/actions/runs/30162067608
 
 ---
 
