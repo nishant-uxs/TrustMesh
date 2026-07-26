@@ -21,7 +21,7 @@ Built for the **Stellar Journey to Mastery — Orange Belt**.
 | **First deploy tx (testnet)** | https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0 |
 | **Sample register tx** | https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24 |
 | **Sample verify tx** | https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76 |
-| **Demo video** | _add Loom / Drive link after recording_ |
+| **Demo video** | https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing |
 | **Live app (Vercel)** | https://trust-mesh-taupe.vercel.app/ |
 
 Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md) · env: [`deployments/testnet.env`](./deployments/testnet.env)
@@ -244,7 +244,7 @@ npm run build
 
 ## Demo video
 
-**Watch:** _add link after recording_
+**Watch:** https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing
 
 Recording script: [`docs/DEMO_VIDEO.md`](./docs/DEMO_VIDEO.md)
 
