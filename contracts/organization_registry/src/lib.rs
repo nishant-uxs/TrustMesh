@@ -112,7 +112,13 @@ impl OrganizationRegistry {
             .set(&DataKey::Org(org_id), &org);
         env.storage()
             .persistent()
+            .extend_ttl(&DataKey::Org(org_id), 100_000, 100_000);
+        env.storage()
+            .persistent()
             .set(&DataKey::OwnerIndex(owner.clone()), &org_id);
+        env.storage()
+            .persistent()
+            .extend_ttl(&DataKey::OwnerIndex(owner.clone()), 100_000, 100_000);
         env.storage()
             .persistent()
             .set(&DataKey::OrgVendors(org_id), &Vec::<Address>::new(&env));

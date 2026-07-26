@@ -71,6 +71,12 @@ mod org_registry {
             let o: Organization = env.storage().instance().get(&(org_id as u32)).unwrap();
             o.verified
         }
+
+        pub fn set_verified(env: Env, org_id: u64, verified: bool) {
+            let mut o: Organization = env.storage().instance().get(&(org_id as u32)).unwrap();
+            o.verified = verified;
+            env.storage().instance().set(&(org_id as u32), &o);
+        }
     }
 }
 
@@ -257,6 +263,24 @@ fn reject_unauthorized_creator() {
 }
 
 #[test]
+fn reject_unverified_org_relationship() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (factory, owner_a, _, _) = setup_factory(&env);
+    // Unverify org B via registry stub
+    let (registry, _, _, _) = factory.get_addresses();
+    org_registry::OrgRegistryClient::new(&env, &registry).set_verified(&2u64, &false);
+
+    let result = factory.try_create_relationship(
+        &owner_a,
+        &1u64,
+        &2u64,
+        &String::from_str(&env, "Should Fail"),
+    );
+    assert_eq!(result, Err(Ok(Error::OrgNotVerified)));
+}
+
+#[test]
 fn get_addresses() {
     let env = Env::default();
     env.mock_all_auths();
@@ -265,3 +289,4 @@ fn get_addresses() {
     assert_ne!(r, rel);
     assert_ne!(rep, t);
 }
+

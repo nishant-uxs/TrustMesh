@@ -61,7 +61,7 @@ export function Sidebar() {
     <>
       <button
         type="button"
-        className="fixed left-4 top-4 z-40 rounded-xl bg-white/90 p-2 shadow-sm lg:hidden"
+        className="fixed left-4 top-4 z-40 flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 p-2 shadow-sm lg:hidden"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
       >

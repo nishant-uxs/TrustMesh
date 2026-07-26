@@ -24,6 +24,22 @@ Built for the **Stellar Journey to Mastery — Orange Belt**.
 | **Demo video** | https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing |
 | **Live app (Vercel)** | https://trust-mesh-taupe.vercel.app/ |
 
+### Screenshots
+
+<p align="center">
+  <img src="./docs/screenshots/mobile-landing.png" alt="TrustMesh mobile landing" width="280" />
+  &nbsp;&nbsp;
+  <img src="./docs/screenshots/mobile-dashboard.png" alt="TrustMesh mobile dashboard" width="280" />
+</p>
+
+<p align="center"><em>Mobile-responsive landing + dashboard (390×844)</em></p>
+
+<p align="center">
+  <img src="./docs/screenshots/ci-green-run.png" alt="Green GitHub Actions CI run" width="720" />
+</p>
+
+<p align="center"><em>CI/CD — Smart Contract Tests + Frontend Tests &amp; Build green on <code>master</code></em></p>
+
 Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md) · env: [`deployments/testnet.env`](./deployments/testnet.env)
 
 ---
@@ -166,6 +182,8 @@ Every push / PR on `master` runs parallel jobs:
 CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)  
 **Latest green run:** https://github.com/nishant-uxs/TrustMesh/actions/runs/30162067608
 
+![Green CI run](./docs/screenshots/ci-green-run.png)
+
 ---
 
 ## Quick start
@@ -230,7 +248,7 @@ Quality bar:
 ## Testing
 
 ```bash
-# 33 smart-contract tests
+# 34 smart-contract tests
 cargo test --workspace
 
 # Frontend

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
-import { Badge, EmptyState } from "@/components/ui/Badge";
+import { Badge, EmptyState, Skeleton } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner, TxStatus } from "@/components/ui/ErrorBanner";
 import { useTrustData } from "@/hooks/useTrustData";
@@ -23,7 +23,7 @@ const ORG_TYPES: OrgType[] = [
 ];
 
 export default function OrganizationsPage() {
-  const { orgs } = useTrustData();
+  const { orgs, loading, refresh } = useTrustData();
   const { address, connect } = useWallet();
   const [name, setName] = useState("");
   const [orgType, setOrgType] = useState<OrgType>("Business");
@@ -52,6 +52,8 @@ export default function OrganizationsPage() {
       const hash = await registerOrganization(address, name, orgType, uri);
       setTx({ phase: "success", hash });
       setName("");
+      setUri("");
+      await refresh();
     } catch (err) {
       const appErr = classifyError(err);
       setError(appErr);
@@ -117,7 +119,11 @@ export default function OrganizationsPage() {
         </form>
 
         <div className="space-y-3 lg:col-span-3">
-          {orgs.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))
+          ) : orgs.length === 0 ? (
             <div className="tm-surface rounded-2xl">
               <EmptyState
                 title="No organizations registered"
@@ -136,7 +142,7 @@ export default function OrganizationsPage() {
                   <div>
                     <h3 className="font-display text-xl text-deep">{org.name}</h3>
                     <p className="mt-1 text-sm text-slate">
-                      {org.orgType} · {org.vendorCount} vendors
+                      #{org.id} · {org.orgType} · {org.vendorCount} vendors
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

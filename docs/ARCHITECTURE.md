@@ -24,5 +24,7 @@ Events use descriptive topic symbols (e.g. `OrganizationRegistered`) so the fron
 
 ## Frontend data strategy
 
-- When contract IDs are configured, writes go on-chain and the activity feed polls testnet events.
-- The console starts empty — no seeded tables or fake balances. Lists and charts fill only from real contract activity.
+- When contract IDs are configured, the console loads organizations, relationships, reviews, and reputation via Soroban read simulations (`loadTrustGraph`).
+- Writes (register / create / accept / complete / review) go on-chain through Freighter-signed invokes.
+- The activity feed polls Testnet `getEvents`.
+- When contract IDs are missing, lists stay empty (no seed / fake balances).

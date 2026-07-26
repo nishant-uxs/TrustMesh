@@ -172,6 +172,10 @@ impl TrustRelationshipFactory {
         let org_a_data = registry_client.get_organization(&org_a);
         let org_b_data = registry_client.get_organization(&org_b);
 
+        if !registry_client.is_verified(&org_a) || !registry_client.is_verified(&org_b) {
+            return Err(Error::OrgNotVerified);
+        }
+
         // Creator must own one of the organizations
         if creator != org_a_data.owner && creator != org_b_data.owner {
             return Err(Error::Unauthorized);

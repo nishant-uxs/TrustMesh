@@ -118,6 +118,28 @@ fn full_lifecycle_pending_to_completed() {
 }
 
 #[test]
+fn reject_double_complete_same_party() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (client, _, factory, party_a, party_b) = setup(&env);
+    let id = client.create(
+        &factory,
+        &party_a,
+        &party_b,
+        &1u64,
+        &2u64,
+        &String::from_str(&env, "Duplicate Complete"),
+    );
+    client.accept(&party_a, &id);
+    client.accept(&party_b, &id);
+    client.complete(&party_a, &id, &80u32);
+    assert_eq!(
+        client.try_complete(&party_a, &id, &85u32),
+        Err(Ok(Error::InvalidState))
+    );
+}
+
+#[test]
 fn dispute_open_and_resolve() {
     let env = Env::default();
     env.mock_all_auths();

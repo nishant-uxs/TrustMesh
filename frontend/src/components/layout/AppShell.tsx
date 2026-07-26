@@ -11,7 +11,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ErrorBoundary>
         <div className="tm-mesh flex min-h-screen">
           <Sidebar />
-          <main className="flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">{children}</main>
+          <main className="min-w-0 flex-1 overflow-x-hidden px-4 pb-10 pt-16 sm:px-6 lg:px-10 lg:pb-8 lg:pt-8">
+            {children}
+          </main>
         </div>
       </ErrorBoundary>
     </WalletProvider>

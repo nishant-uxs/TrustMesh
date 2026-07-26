@@ -7,9 +7,11 @@ import { Button } from "./Button";
 export function ErrorBanner({
   error,
   onDismiss,
+  dismissLabel = "Dismiss",
 }: {
   error: AppError | { message: string; technical?: string; kind?: string };
   onDismiss?: () => void;
+  dismissLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -37,7 +39,7 @@ export function ErrorBanner({
         </div>
         {onDismiss && (
           <Button variant="ghost" size="sm" onClick={onDismiss}>
-            Dismiss
+            {dismissLabel}
           </Button>
         )}
       </div>

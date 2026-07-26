@@ -162,6 +162,9 @@ impl TrustRelationship {
         };
 
         env.storage().persistent().set(&DataKey::Rel(id), &rel);
+        env.storage()
+            .persistent()
+            .extend_ttl(&DataKey::Rel(id), 100_000, 100_000);
         env.storage().instance().set(&DataKey::NextId, &(id + 1));
         let total: u64 = env.storage().instance().get(&DataKey::Total).unwrap();
         env.storage().instance().set(&DataKey::Total, &(total + 1));
@@ -224,8 +227,14 @@ impl TrustRelationship {
         }
 
         if actor == rel.party_a {
+            if rel.a_completed {
+                return Err(Error::InvalidState);
+            }
             rel.a_completed = true;
         } else if actor == rel.party_b {
+            if rel.b_completed {
+                return Err(Error::InvalidState);
+            }
             rel.b_completed = true;
         } else {
             return Err(Error::Unauthorized);
