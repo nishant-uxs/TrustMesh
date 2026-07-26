@@ -22,7 +22,7 @@ Built for the **Stellar Journey to Mastery — Orange Belt**.
 | **Sample register tx** | https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24 |
 | **Sample verify tx** | https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76 |
 | **Demo video** | _add Loom / Drive link after recording_ |
-| **Live app (Vercel)** | _add after deploy — see [`docs/VERCEL_DEPLOY.md`](./docs/VERCEL_DEPLOY.md)_ |
+| **Live app (Vercel)** | https://trust-mesh-taupe.vercel.app/ |
 
 Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md) · env: [`deployments/testnet.env`](./deployments/testnet.env)
 
