@@ -105,6 +105,18 @@
                       "key": {
                         "vec": [
                           {
+                            "symbol": "FeeCollector"
+                          }
+                        ]
+                      },
+                      "val": {
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                      }
+                    },
+                    {
+                      "key": {
+                        "vec": [
+                          {
                             "symbol": "FeeConfig"
                           }
                         ]

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit } from "next/font/google";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -24,9 +26,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.variable} ${fraunces.variable} antialiased`}>
-        {children}
+        <ThemeProvider>
+          {children}
+          <ToastProvider />
+        </ThemeProvider>
       </body>
     </html>
   );

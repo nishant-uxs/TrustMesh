@@ -1,12 +1,15 @@
 "use client";
 
 import { TopBar } from "@/components/layout/TopBar";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { CONTRACTS, NETWORK, contractsConfigured } from "@/lib/config";
 import { explorerContractUrl, shortenAddress } from "@/lib/format";
 
 export default function SettingsPage() {
   const configured = contractsConfigured();
+  const { theme, toggle } = useTheme();
 
   return (
     <div>
@@ -15,6 +18,18 @@ export default function SettingsPage() {
         subtitle="Network configuration, contract addresses, and wallet preferences."
       />
       <div className="grid max-w-3xl gap-6">
+        <section className="tm-surface rounded-2xl p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl text-deep">Appearance</h2>
+              <p className="mt-1 text-sm text-slate">Toggle light / dark console theme.</p>
+            </div>
+            <Button variant="secondary" size="sm" onClick={toggle}>
+              {theme === "light" ? "Switch to dark" : "Switch to light"}
+            </Button>
+          </div>
+        </section>
+
         <section className="tm-surface rounded-2xl p-6">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-display text-xl text-deep">Network</h2>

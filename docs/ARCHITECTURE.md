@@ -9,7 +9,7 @@
 | `trust_relationship` | Relationship lifecycle, disputes, completion; updates reputation |
 | `reputation` | Trust score accounting from reviews, completions, and disputes |
 | `review_verification` | Review submission + admin verification; feeds reputation |
-| `treasury` | Platform fee config, deposit/withdraw, fee event accounting |
+| `treasury` | Fee config + optional SAC token custody (deposit / fee pull / withdraw / skim) |
 
 ## Authorization model
 

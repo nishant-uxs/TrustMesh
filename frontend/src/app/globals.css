@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+html[data-theme="light"] {
   --tm-ink: #0b1f2a;
   --tm-deep: #123047;
   --tm-sea: #1a6b6a;
@@ -14,6 +15,28 @@
   --foreground: #0b1f2a;
   --surface: rgba(255, 255, 255, 0.72);
   --border: rgba(18, 48, 71, 0.1);
+  --page-grad-a: rgba(45, 212, 191, 0.18);
+  --page-grad-b: rgba(26, 107, 106, 0.12);
+  --page-base: linear-gradient(180deg, #eef5f6 0%, #f4f7f8 40%, #eef2f4 100%);
+}
+
+html[data-theme="dark"] {
+  --tm-ink: #e8f1f4;
+  --tm-deep: #d7e6ee;
+  --tm-sea: #5eead4;
+  --tm-mint: #2dd4bf;
+  --tm-foam: #123047;
+  --tm-sand: #1a2c38;
+  --tm-amber: #fbbf24;
+  --tm-coral: #fb7185;
+  --tm-slate: #94a3b8;
+  --background: #0b1620;
+  --foreground: #e8f1f4;
+  --surface: rgba(18, 36, 48, 0.78);
+  --border: rgba(232, 241, 244, 0.12);
+  --page-grad-a: rgba(45, 212, 191, 0.12);
+  --page-grad-b: rgba(26, 107, 106, 0.18);
+  --page-base: linear-gradient(180deg, #0b1620 0%, #10202b 45%, #0d1a24 100%);
 }
 
 @theme inline {
@@ -43,9 +66,9 @@ html {
 
 body {
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(45, 212, 191, 0.18), transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, rgba(26, 107, 106, 0.12), transparent 50%),
-    linear-gradient(180deg, #eef5f6 0%, #f4f7f8 40%, #eef2f4 100%);
+    radial-gradient(1200px 600px at 10% -10%, var(--page-grad-a), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, var(--page-grad-b), transparent 50%),
+    var(--page-base);
   color: var(--foreground);
   font-family: var(--font-outfit), ui-sans-serif, sans-serif;
   min-height: 100vh;

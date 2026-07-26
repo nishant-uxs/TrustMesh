@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
+import { toast } from "@/components/providers/ToastProvider";
 import { Badge, EmptyState, Skeleton } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner, TxStatus } from "@/components/ui/ErrorBanner";
+import { Pagination, SearchFilters } from "@/components/ui/SearchFilters";
 import { useTrustData } from "@/hooks/useTrustData";
 import { useWallet } from "@/hooks/useWallet";
 import { contractsConfigured } from "@/lib/config";
@@ -22,6 +24,8 @@ const ORG_TYPES: OrgType[] = [
   "ServiceProvider",
 ];
 
+const PAGE_SIZE = 6;
+
 export default function OrganizationsPage() {
   const { orgs, loading, refresh } = useTrustData();
   const { address, connect } = useWallet();
@@ -30,6 +34,26 @@ export default function OrganizationsPage() {
   const [uri, setUri] = useState("");
   const [tx, setTx] = useState<TxState>({ phase: "idle" });
   const [error, setError] = useState<ReturnType<typeof classifyError> | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return orgs.filter((org) => {
+      if (filter === "verified" && !org.verified) return false;
+      if (filter === "pending" && org.verified) return false;
+      if (!q) return true;
+      return (
+        org.name.toLowerCase().includes(q) ||
+        String(org.id).includes(q) ||
+        org.orgType.toLowerCase().includes(q)
+      );
+    });
+  }, [orgs, query, filter]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   async function onRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -51,12 +75,14 @@ export default function OrganizationsPage() {
       setTx({ phase: "signing" });
       const hash = await registerOrganization(address, name, orgType, uri);
       setTx({ phase: "success", hash });
+      toast.success("Organization registered on Testnet");
       setName("");
       setUri("");
       await refresh();
     } catch (err) {
       const appErr = classifyError(err);
       setError(appErr);
+      toast.error(appErr.message);
       setTx({ phase: "failed", error: appErr.message });
     }
   }
@@ -118,12 +144,28 @@ export default function OrganizationsPage() {
           {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         </form>
 
-        <div className="space-y-3 lg:col-span-3">
+        <div className="space-y-4 lg:col-span-3">
+          <SearchFilters
+            placeholder="Search organizations…"
+            filters={[
+              { label: "All", value: "all" },
+              { label: "Verified", value: "verified" },
+              { label: "Pending", value: "pending" },
+            ]}
+            onSearch={(q) => {
+              setQuery(q);
+              setPage(1);
+            }}
+            onFilter={(v) => {
+              setFilter(v);
+              setPage(1);
+            }}
+          />
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-24 w-full" />
             ))
-          ) : orgs.length === 0 ? (
+          ) : pageItems.length === 0 ? (
             <div className="tm-surface rounded-2xl">
               <EmptyState
                 title="No organizations registered"
@@ -131,7 +173,7 @@ export default function OrganizationsPage() {
               />
             </div>
           ) : (
-            orgs.map((org, i) => (
+            pageItems.map((org, i) => (
               <Link
                 key={org.id}
                 href={`/profile/${org.id}`}
@@ -159,6 +201,7 @@ export default function OrganizationsPage() {
               </Link>
             ))
           )}
+          <Pagination page={page} pageCount={pageCount} onChange={setPage} />
         </div>
       </div>
     </div>

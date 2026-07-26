@@ -35,10 +35,34 @@ Built for the **Stellar Journey to Mastery — Orange Belt**.
 <p align="center"><em>Mobile-responsive landing + dashboard (390×844)</em></p>
 
 <p align="center">
+  <img src="./docs/screenshots/desktop-landing.png" alt="TrustMesh desktop landing" width="720" />
+</p>
+
+<p align="center"><em>Desktop landing</em></p>
+
+<p align="center">
+  <img src="./docs/screenshots/desktop-organizations.png" alt="Organizations with search filters" width="720" />
+</p>
+
+<p align="center"><em>Organizations — search, filters, on-chain register</em></p>
+
+<p align="center">
+  <img src="./docs/screenshots/desktop-relationships.png" alt="Relationships with confirm actions" width="720" />
+</p>
+
+<p align="center"><em>Relationships — lifecycle actions + confirm dialogs</em></p>
+
+<p align="center">
+  <img src="./docs/screenshots/desktop-settings.png" alt="Settings contracts + theme" width="720" />
+</p>
+
+<p align="center"><em>Settings — network, 6 contract IDs, light/dark theme</em></p>
+
+<p align="center">
   <img src="./docs/screenshots/ci-green-run.png" alt="Green GitHub Actions CI run" width="720" />
 </p>
 
-<p align="center"><em>CI/CD — Smart Contract Tests + Frontend Tests &amp; Build green on <code>master</code></em></p>
+<p align="center"><em>CI/CD — Contracts (test + WASM) → Frontend (lint/typecheck/test/build) → Deploy gate</em></p>
 
 Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md) · env: [`deployments/testnet.env`](./deployments/testnet.env)
 
@@ -49,9 +73,11 @@ Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIO
 - **Six cooperating Soroban contracts** with explicit admin + authorized-caller boundaries
 - **Factory orchestration** that talks to registry, relationship, reputation, and treasury in one flow
 - **Reputation scoring** from completions, verified reviews, and dispute outcomes
+- **SAC-backed treasury** — optional Stellar Asset Contract custody for deposits, fee pulls, and fee skim
 - **Wallet picker on connect** (Freighter / xBull / LOBSTR / Albedo / Hana / Rabet)
 - **Freighter-signed invokes** for register / relationships / reviews (real Testnet txs)
 - **Empty-by-default console** — no seed tables, no fake balances
+- **Search, filters, pagination, toasts, confirm dialogs, light/dark theme**
 - **Live Testnet deployment** with contract IDs + transaction hashes
 - **Event streaming** via RPC `getEvents` into a live activity timeline
 
@@ -174,10 +200,11 @@ Explorer: https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb44
 
 ### CI/CD pipeline
 
-Every push / PR on `master` runs parallel jobs:
+Every push / PR on `master` runs a gated pipeline:
 
-1. **Contracts** — `cargo test --workspace`
-2. **Frontend** — `npm ci` → `npm test` → `npm run lint` → `npm run build`
+1. **Contracts** — `cargo test --workspace` → WASM build (6 crates) → validate `deployments/testnet.json`
+2. **Frontend** — `npm ci` → lint → **typecheck** → test → production build
+3. **Deploy gate** — confirms Vercel production path after both jobs pass
 
 CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)  
 **Latest green run:** https://github.com/nishant-uxs/TrustMesh/actions/runs/30162067608
@@ -236,6 +263,9 @@ Pages: Landing · Dashboard · Organizations · Relationships · Reputation · R
 Quality bar:
 
 - Multi-wallet connect modal
+- Light / dark theme
+- Search + status filters + pagination on orgs / relationships / reviews
+- Toasts + confirm dialogs for irreversible relationship actions
 - Skeletons + empty states (no fake seed data)
 - Classified wallet / RPC / contract errors
 - Transaction status phases (simulate → sign → confirm)
@@ -248,12 +278,13 @@ Quality bar:
 ## Testing
 
 ```bash
-# 34 smart-contract tests
+# 39 smart-contract tests
 cargo test --workspace
 
 # Frontend
 cd frontend
 npm run lint
+npm run typecheck
 npm test
 npm run build
 ```
@@ -299,6 +330,7 @@ Mapped requirement → implementation: [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/
 - Creator must own one side of a relationship
 - Self-review blocked; duplicate pair reviews blocked
 - Empty-by-default UI — no fabricated balances or seed tables
+- Treasury supports optional SAC token custody (`set_token`) for real fee pulls / deposits / withdrawals / skim
 
 ---
 

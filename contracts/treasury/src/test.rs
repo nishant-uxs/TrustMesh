@@ -1,14 +1,29 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Env, String};
+use soroban_sdk::{
+    testutils::Address as _,
+    token::{StellarAssetClient, TokenClient},
+    Address, Env, String,
+};
 
-fn setup(env: &Env) -> (TreasuryClient, Address) {
+fn setup(env: &Env) -> (TreasuryClient<'_>, Address) {
     let contract_id = env.register(Treasury, ());
     let client = TreasuryClient::new(env, &contract_id);
     let admin = Address::generate(env);
     client.initialize(&admin);
     (client, admin)
+}
+
+fn setup_with_token(
+    env: &Env,
+) -> (TreasuryClient<'_>, Address, Address, StellarAssetClient<'_>) {
+    let (treasury, admin) = setup(env);
+    let sac = env.register_stellar_asset_contract_v2(admin.clone());
+    let token_addr = sac.address();
+    treasury.set_token(&token_addr);
+    let asset = StellarAssetClient::new(env, &token_addr);
+    (treasury, admin, token_addr, asset)
 }
 
 #[test]
@@ -24,7 +39,7 @@ fn initialize_with_default_fees() {
 }
 
 #[test]
-fn deposit_and_withdraw() {
+fn deposit_and_withdraw_accounting() {
     let env = Env::default();
     env.mock_all_auths();
     let (client, _) = setup(&env);
@@ -36,6 +51,78 @@ fn deposit_and_withdraw() {
     let stats = client.get_stats();
     assert_eq!(stats.balance, 600_000);
     assert_eq!(stats.total_withdrawn, 400_000);
+}
+
+#[test]
+fn deposit_and_withdraw_with_token() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (treasury, _, token_addr, asset) = setup_with_token(&env);
+    let payer = Address::generate(&env);
+    let recipient = Address::generate(&env);
+    asset.mint(&payer, &5_000_000i128);
+
+    treasury.deposit(&payer, &2_000_000i128);
+    assert_eq!(treasury.get_balance(), 2_000_000);
+
+    let token = TokenClient::new(&env, &token_addr);
+    assert_eq!(token.balance(&treasury.address), 2_000_000);
+    assert_eq!(token.balance(&payer), 3_000_000);
+
+    treasury.withdraw(&recipient, &500_000i128);
+    assert_eq!(treasury.get_balance(), 1_500_000);
+    assert_eq!(token.balance(&recipient), 500_000);
+    assert_eq!(token.balance(&treasury.address), 1_500_000);
+}
+
+#[test]
+fn record_fee_pulls_token_from_payer() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (treasury, admin, token_addr, asset) = setup_with_token(&env);
+    let worker = Address::generate(&env);
+    let payer = Address::generate(&env);
+    treasury.set_authorized(&worker, &true);
+    asset.mint(&payer, &10_000_000i128);
+
+    treasury.record_fee(
+        &worker,
+        &payer,
+        &String::from_str(&env, "relationship"),
+        &5_000_000i128,
+    );
+    assert_eq!(treasury.get_balance(), 5_000_000);
+    let token = TokenClient::new(&env, &token_addr);
+    assert_eq!(token.balance(&treasury.address), 5_000_000);
+    assert_eq!(token.balance(&payer), 5_000_000);
+    let _ = admin;
+}
+
+#[test]
+fn skim_fees_to_collector() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (treasury, admin, token_addr, asset) = setup_with_token(&env);
+    let collector = Address::generate(&env);
+    let payer = Address::generate(&env);
+    treasury.set_fee_collector(&collector);
+    asset.mint(&payer, &3_000_000i128);
+    treasury.deposit(&payer, &3_000_000i128);
+    treasury.skim_fees(&1_000_000i128);
+
+    let token = TokenClient::new(&env, &token_addr);
+    assert_eq!(token.balance(&collector), 1_000_000);
+    assert_eq!(treasury.get_balance(), 2_000_000);
+    let _ = admin;
+}
+
+#[test]
+fn skim_without_token_fails() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let (client, _) = setup(&env);
+    client.deposit(&Address::generate(&env), &100i128);
+    assert_eq!(client.try_skim_fees(&50i128), Err(Ok(Error::TokenNotSet)));
 }
 
 #[test]
@@ -54,7 +141,6 @@ fn record_fee_from_authorized() {
     );
     assert_eq!(client.get_balance(), 5_000_000);
     assert_eq!(client.get_stats().fee_events, 1);
-    // admin path
     client.record_fee(
         &admin,
         &payer,

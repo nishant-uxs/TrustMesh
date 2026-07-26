@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
+import { toast } from "@/components/providers/ToastProvider";
 import { Badge, EmptyState, Skeleton } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorBanner, TxStatus } from "@/components/ui/ErrorBanner";
+import { Pagination, SearchFilters } from "@/components/ui/SearchFilters";
 import { useTrustData } from "@/hooks/useTrustData";
 import { useWallet } from "@/hooks/useWallet";
 import { contractsConfigured } from "@/lib/config";
@@ -18,6 +21,8 @@ import { classifyError } from "@/lib/errors";
 import { timeAgo } from "@/lib/format";
 import type { TxState } from "@/lib/types";
 
+const PAGE_SIZE = 5;
+
 export default function RelationshipsPage() {
   const { relationships, orgs, loading, refresh } = useTrustData();
   const { address, connect } = useWallet();
@@ -28,6 +33,30 @@ export default function RelationshipsPage() {
   const [disputeReason, setDisputeReason] = useState("");
   const [tx, setTx] = useState<TxState>({ phase: "idle" });
   const [error, setError] = useState<ReturnType<typeof classifyError> | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [confirm, setConfirm] = useState<{
+    action: "complete" | "dispute";
+    id: number;
+  } | null>(null);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return relationships.filter((rel) => {
+      if (filter !== "all" && rel.status.toLowerCase() !== filter) return false;
+      if (!q) return true;
+      return (
+        rel.title.toLowerCase().includes(q) ||
+        String(rel.id).includes(q) ||
+        String(rel.orgA).includes(q) ||
+        String(rel.orgB).includes(q)
+      );
+    });
+  }, [relationships, query, filter]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   async function ensureWallet(): Promise<string | null> {
     if (address) return address;
@@ -54,11 +83,13 @@ export default function RelationshipsPage() {
       setTx({ phase: "signing" });
       const hash = await createRelationship(wallet, a, b, title);
       setTx({ phase: "success", hash });
+      toast.success("Relationship created on-chain");
       setTitle("");
       await refresh();
     } catch (err) {
       const appErr = classifyError(err);
       setError(appErr);
+      toast.error(appErr.message);
       setTx({ phase: "failed", error: appErr.message });
     }
   }
@@ -85,11 +116,21 @@ export default function RelationshipsPage() {
         );
       }
       setTx({ phase: "success", hash });
+      toast.success(
+        action === "accept"
+          ? "Relationship accepted"
+          : action === "complete"
+            ? "Completion recorded"
+            : "Dispute opened",
+      );
+      setConfirm(null);
       await refresh();
     } catch (err) {
       const appErr = classifyError(err);
       setError(appErr);
+      toast.error(appErr.message);
       setTx({ phase: "failed", error: appErr.message });
+      setConfirm(null);
     }
   }
 
@@ -195,12 +236,30 @@ export default function RelationshipsPage() {
           {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         </form>
 
-        <div className="space-y-3 lg:col-span-3">
+        <div className="space-y-4 lg:col-span-3">
+          <SearchFilters
+            placeholder="Search relationships…"
+            filters={[
+              { label: "All", value: "all" },
+              { label: "Pending", value: "pending" },
+              { label: "Active", value: "active" },
+              { label: "Completed", value: "completed" },
+              { label: "Disputed", value: "disputed" },
+            ]}
+            onSearch={(q) => {
+              setQuery(q);
+              setPage(1);
+            }}
+            onFilter={(v) => {
+              setFilter(v);
+              setPage(1);
+            }}
+          />
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-28 w-full" />
             ))
-          ) : relationships.length === 0 ? (
+          ) : pageItems.length === 0 ? (
             <div className="tm-surface rounded-2xl">
               <EmptyState
                 title="No relationships yet"
@@ -208,7 +267,7 @@ export default function RelationshipsPage() {
               />
             </div>
           ) : (
-            relationships.map((rel) => (
+            pageItems.map((rel) => (
               <article key={rel.id} className="tm-surface rounded-2xl p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-display text-xl text-deep">{rel.title}</h3>
@@ -243,13 +302,13 @@ export default function RelationshipsPage() {
                   )}
                   {rel.status === "Active" && (
                     <>
-                      <Button size="sm" onClick={() => runRelAction("complete", rel.id)}>
+                      <Button size="sm" onClick={() => setConfirm({ action: "complete", id: rel.id })}>
                         Complete
                       </Button>
                       <Button
                         size="sm"
                         variant="danger"
-                        onClick={() => runRelAction("dispute", rel.id)}
+                        onClick={() => setConfirm({ action: "dispute", id: rel.id })}
                       >
                         Open dispute
                       </Button>
@@ -259,8 +318,26 @@ export default function RelationshipsPage() {
               </article>
             ))
           )}
+          <Pagination page={page} pageCount={pageCount} onChange={setPage} />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.action === "dispute" ? "Open dispute?" : "Complete relationship?"}
+        description={
+          confirm?.action === "dispute"
+            ? "This marks the relationship as disputed and updates reputation signals on-chain."
+            : "Both parties must complete. This writes a permanent completion record on Testnet."
+        }
+        confirmLabel={confirm?.action === "dispute" ? "Open dispute" : "Complete"}
+        danger={confirm?.action === "dispute"}
+        loading={tx.phase === "signing"}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => {
+          if (confirm) void runRelAction(confirm.action, confirm.id);
+        }}
+      />
     </div>
   );
 }

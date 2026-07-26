@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
+import { toast } from "@/components/providers/ToastProvider";
 import { Badge, EmptyState, Skeleton } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner, TxStatus } from "@/components/ui/ErrorBanner";
+import { Pagination, SearchFilters } from "@/components/ui/SearchFilters";
 import { useTrustData } from "@/hooks/useTrustData";
 import { useWallet } from "@/hooks/useWallet";
 import { contractsConfigured } from "@/lib/config";
@@ -12,6 +14,8 @@ import { submitReview } from "@/lib/contracts";
 import { classifyError } from "@/lib/errors";
 import { timeAgo } from "@/lib/format";
 import type { TxState } from "@/lib/types";
+
+const PAGE_SIZE = 6;
 
 export default function ReviewsPage() {
   const { reviews, orgs, loading, refresh } = useTrustData();
@@ -23,8 +27,29 @@ export default function ReviewsPage() {
   const [commentHash, setCommentHash] = useState("");
   const [tx, setTx] = useState<TxState>({ phase: "idle" });
   const [error, setError] = useState<ReturnType<typeof classifyError> | null>(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
 
   const orgName = (id: number) => orgs.find((o) => o.id === id)?.name || `Org #${id}`;
+
+  const filtered = useMemo(() => {
+    const nameOf = (id: number) => orgs.find((o) => o.id === id)?.name || `Org #${id}`;
+    const q = query.trim().toLowerCase();
+    return reviews.filter((review) => {
+      if (filter !== "all" && review.status.toLowerCase() !== filter) return false;
+      if (!q) return true;
+      return (
+        nameOf(review.reviewerOrg).toLowerCase().includes(q) ||
+        nameOf(review.revieweeOrg).toLowerCase().includes(q) ||
+        review.commentHash.toLowerCase().includes(q) ||
+        String(review.id).includes(q)
+      );
+    });
+  }, [reviews, query, filter, orgs]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,11 +80,13 @@ export default function ReviewsPage() {
         commentHash,
       );
       setTx({ phase: "success", hash });
+      toast.success("Review submitted on-chain");
       setCommentHash("");
       await refresh();
     } catch (err) {
       const appErr = classifyError(err);
       setError(appErr);
+      toast.error(appErr.message);
       setTx({ phase: "failed", error: appErr.message });
     }
   }
@@ -167,12 +194,29 @@ export default function ReviewsPage() {
           {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         </form>
 
-        <div className="space-y-3 lg:col-span-3">
+        <div className="space-y-4 lg:col-span-3">
+          <SearchFilters
+            placeholder="Search reviews…"
+            filters={[
+              { label: "All", value: "all" },
+              { label: "Pending", value: "pending" },
+              { label: "Verified", value: "verified" },
+              { label: "Rejected", value: "rejected" },
+            ]}
+            onSearch={(q) => {
+              setQuery(q);
+              setPage(1);
+            }}
+            onFilter={(v) => {
+              setFilter(v);
+              setPage(1);
+            }}
+          />
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-24 w-full" />
             ))
-          ) : reviews.length === 0 ? (
+          ) : pageItems.length === 0 ? (
             <div className="tm-surface rounded-2xl">
               <EmptyState
                 title="No reviews yet"
@@ -180,7 +224,7 @@ export default function ReviewsPage() {
               />
             </div>
           ) : (
-            reviews.map((review) => (
+            pageItems.map((review) => (
               <article key={review.id} className="tm-surface rounded-2xl p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium text-deep">
@@ -204,6 +248,7 @@ export default function ReviewsPage() {
               </article>
             ))
           )}
+          <Pagination page={page} pageCount={pageCount} onChange={setPage} />
         </div>
       </div>
     </div>
