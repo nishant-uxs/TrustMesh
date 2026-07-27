@@ -1,14 +1,27 @@
 # TrustMesh
 
-**Decentralized business trust & reputation on Stellar Soroban.**
+**Decentralized business trust & reputation on Stellar Soroban**
+
+[![Live Demo](https://img.shields.io/badge/Live-trust--mesh--taupe.vercel.app-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://trust-mesh-taupe.vercel.app)
+[![Stellar](https://img.shields.io/badge/Network-Testnet-7D00FF?style=for-the-badge&logo=stellar)](https://stellar.expert/explorer/testnet)
+[![Soroban](https://img.shields.io/badge/Contracts-6_Soroban-0ea5e9?style=for-the-badge)](./contracts)
+[![CI](https://img.shields.io/badge/CI-passing-166534?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/nishant-uxs/TrustMesh/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-1e293b?style=for-the-badge)](./LICENSE)
+
+---
+
+## Overview
 
 TrustMesh is trust infrastructure for businesses, startups, agencies, freelancers, vendors, and service providers — not crowdfunding, not escrow, not NFTs, not a DAO, not CRM, and not LinkedIn.
 
 Organizations establish **verifiable trust** through completed relationships, verified reviews, dispute history, reputation scores, and immutable on-chain records.
 
-Built for the **Stellar Journey to Mastery — Orange Belt**.
-
-[![CI](https://github.com/nishant-uxs/TrustMesh/actions/workflows/ci.yml/badge.svg)](https://github.com/nishant-uxs/TrustMesh/actions/workflows/ci.yml)
+| | |
+|---|---|
+| **Live demo** | https://trust-mesh-taupe.vercel.app |
+| **Network** | Stellar Testnet · Soroban |
+| **Stack** | Next.js 15 · TypeScript · Rust · 6 Soroban contracts |
+| **Program** | Stellar Journey to Mastery — Orange Belt |
 
 ---
 
