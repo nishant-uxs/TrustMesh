@@ -35,7 +35,6 @@ Organizations establish **verifiable trust** through completed relationships, ve
 | **Sample register tx** | https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24 |
 | **Sample verify tx** | https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76 |
 | **Demo video** | https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing |
-| **Live app (Vercel)** | https://trust-mesh-taupe.vercel.app/ |
 
 ### Screenshots
 
