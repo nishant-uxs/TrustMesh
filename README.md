@@ -21,7 +21,9 @@ Organizations establish **verifiable trust** through completed relationships, ve
 | **Live demo** | https://trust-mesh-taupe.vercel.app |
 | **Network** | Stellar Testnet · Soroban |
 | **Stack** | Next.js 15 · TypeScript · Rust · 6 Soroban contracts |
-| **Program** | Stellar Journey to Mastery — Orange Belt |
+| **Program** | Stellar Journey to Mastery — Green Belt |
+
+Built as a production MVP on the existing Orange Belt contract foundation.
 
 ---
 
@@ -35,6 +37,7 @@ Organizations establish **verifiable trust** through completed relationships, ve
 | **Sample register tx** | https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24 |
 | **Sample verify tx** | https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76 |
 | **Demo video** | https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing |
+| **Live app (Vercel)** | https://trust-mesh-taupe.vercel.app/ |
 
 ### Screenshots
 
@@ -90,8 +93,33 @@ Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIO
 - **Freighter-signed invokes** for register / relationships / reviews (real Testnet txs)
 - **Empty-by-default console** — no seed tables, no fake balances
 - **Search, filters, pagination, toasts, confirm dialogs, light/dark theme**
+- **Guided first-time onboarding** (wallet → role → organization → next action)
+- **Privacy-first product analytics** (local events + optional PostHog)
+- **Error monitoring** (local incidents + optional Sentry)
 - **Live Testnet deployment** with contract IDs + transaction hashes
 - **Event streaming** via RPC `getEvents` into a live activity timeline
+
+---
+
+## Product
+
+**Problem.** Businesses still prove trust with PDFs, screenshots, and platforms that own the data.
+
+**Solution.** TrustMesh records organizations, working relationships, reviews, and reputation on Stellar Testnet so a partner can verify the trail themselves.
+
+### User flow
+
+```mermaid
+flowchart LR
+  A[Connect wallet] --> B[Choose role]
+  B --> C[Publish organization]
+  C --> D[Create relationship]
+  D --> E[Accept / complete]
+  E --> F[Submit review]
+  F --> G[Public reputation + activity]
+```
+
+Guided setup lives at `/onboarding`. Human-language copy explains each wallet approval. Failed actions stay off-chain and offer a retry (including free Testnet funding via Friendbot).
 
 ---
 
@@ -250,7 +278,7 @@ bash scripts/deploy.sh --source deployer --network testnet
 ```bash
 cd frontend
 cp ../deployments/testnet.env .env.local
-# or: cp .env.example .env.local
+# optional: PostHog / Sentry keys from frontend/.env.example
 npm install
 npm run dev
 ```
@@ -270,20 +298,30 @@ Then refresh `frontend/.env.local` from `deployments/testnet.env`.
 
 ## Frontend
 
-Pages: Landing · Dashboard · Organizations · Relationships · Reputation · Reviews · Analytics · Activity · Public Profile · Settings
+Pages: Landing · Get started · Dashboard · Organizations · Relationships · Reputation · Reviews · Analytics · Activity · Public Profile · Settings
 
 Quality bar:
 
+- Guided onboarding for first-time users
 - Multi-wallet connect modal
 - Light / dark theme
-- Search + status filters + pagination on orgs / relationships / reviews
-- Toasts + confirm dialogs for irreversible relationship actions
-- Skeletons + empty states (no fake seed data)
-- Classified wallet / RPC / contract errors
-- Transaction status phases (simulate → sign → confirm)
+- Search + status filters + pagination
+- Toasts + confirm dialogs
+- Transaction panels that say what to do next
+- Skeletons + empty states with a next action (no fake seed data)
+- Classified wallet / RPC / contract errors with recovery
+- Product analytics + monitoring panels
 - Live activity feed from contract events
-- Settings panel with linked Testnet contract IDs
 - Responsive desktop / tablet / mobile layout
+
+---
+
+## Analytics & monitoring
+
+- **Analytics:** local product events (see Analytics page). Optional PostHog via `NEXT_PUBLIC_POSTHOG_KEY`. Docs: [`docs/ANALYTICS.md`](./docs/ANALYTICS.md)
+- **Monitoring:** local incident log (see Settings). Optional Sentry via `NEXT_PUBLIC_SENTRY_DSN`. Docs: [`docs/MONITORING.md`](./docs/MONITORING.md)
+
+Neither integration runs unless the env var is set. No secrets belong in git.
 
 ---
 
@@ -309,27 +347,31 @@ npm run build
 
 Recording script: [`docs/DEMO_VIDEO.md`](./docs/DEMO_VIDEO.md)
 
-Suggested 90s flow: landing → wallet connect → Settings (contract IDs) → register organization (sign) → Stellar Expert tx → Activity.
+Suggested 90s flow: landing → Get started → connect wallet → Friendbot (optional) → choose role → publish organization (sign) → public receipt → start a relationship.
+
+Green Belt evidence template (real links only): [`docs/GREEN_BELT_EVIDENCE.md`](./docs/GREEN_BELT_EVIDENCE.md)
 
 ---
 
-## Orange Belt checklist
+## Green Belt checklist
 
-Mapped requirement → implementation: [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/ORANGE_BELT_CHECKLIST.md)
+Mapped requirement → implementation: [`docs/GREEN_BELT_CHECKLIST.md`](./docs/GREEN_BELT_CHECKLIST.md)
 
-- [x] Advanced Soroban smart contracts
-- [x] Multiple smart contracts (6)
-- [x] Contract-to-contract communication
-- [x] Event streaming
-- [x] Production architecture
-- [x] Responsive frontend + mobile
-- [x] Error handling + loading states
-- [x] Smart contract testing
-- [x] Frontend testing
-- [x] CI/CD
-- [x] Deployment scripts
+- [x] Production MVP workflow on Testnet
+- [x] First-time onboarding
+- [x] Human-language transaction feedback
+- [x] Mobile / tablet / desktop layouts
+- [x] Error handling + recovery
+- [x] Loading and empty states
+- [x] Product analytics (local + optional PostHog)
+- [x] Error monitoring (local + optional Sentry)
+- [x] Shared graph cache / fewer redundant RPC reads
+- [x] Smart contract tests preserved
+- [x] Frontend tests expanded
+- [x] CI/CD (lint, typecheck, tests, WASM, build)
 - [x] Production documentation
-- [x] Stellar Testnet deployment
+
+Orange Belt contract map remains in [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/ORANGE_BELT_CHECKLIST.md)
 
 ---
 
@@ -342,7 +384,8 @@ Mapped requirement → implementation: [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/
 - Creator must own one side of a relationship
 - Self-review blocked; duplicate pair reviews blocked
 - Empty-by-default UI — no fabricated balances or seed tables
-- Treasury supports optional SAC token custody (`set_token`) for real fee pulls / deposits / withdrawals / skim
+- Product analytics never persist full wallet addresses
+- Optional Sentry/PostHog keys live in env vars only
 
 ---
 

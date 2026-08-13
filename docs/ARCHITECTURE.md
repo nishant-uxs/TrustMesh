@@ -24,7 +24,8 @@ Events use descriptive topic symbols (e.g. `OrganizationRegistered`) so the fron
 
 ## Frontend data strategy
 
-- When contract IDs are configured, the console loads organizations, relationships, reviews, and reputation via Soroban read simulations (`loadTrustGraph`).
-- Writes (register / create / accept / complete / review) go on-chain through Freighter-signed invokes.
-- The activity feed polls Testnet `getEvents`.
+- `TrustDataProvider` loads the graph once per shell and refreshes in the background (tab must be visible).
+- `loadTrustGraph` uses a short TTL cache and coalesces in-flight RPC.
+- Reputation scores come from `get_reputation` only (no extra `get_trust_score` round trip).
+- Writes go through `runSignedAction` (analytics + monitoring + classified errors).
 - When contract IDs are missing, lists stay empty (no seed / fake balances).
