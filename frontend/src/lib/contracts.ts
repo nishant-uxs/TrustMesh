@@ -12,6 +12,7 @@ import type {
 } from "./types";
 import { signTransactionXdr } from "./wallets";
 import { rangeIds } from "./graph";
+import { invalidateTrustGraph, withTrustGraphCache } from "./graphCache";
 
 const { Contract, rpc, TransactionBuilder, Account, BASE_FEE } = StellarSdk;
 
@@ -63,6 +64,7 @@ async function buildAndSend(
     await new Promise((r) => setTimeout(r, 2000));
     const get = await server.getTransaction(result.hash);
     if (get.status === rpc.Api.GetTransactionStatus.SUCCESS) {
+      invalidateTrustGraph();
       return result.hash;
     }
     if (get.status === rpc.Api.GetTransactionStatus.FAILED) {
@@ -194,6 +196,19 @@ export async function fetchOrganization(orgId: number): Promise<Organization | n
   }
 }
 
+export async function fetchOrganizationByOwner(owner: string): Promise<Organization | null> {
+  try {
+    const raw = (await simulateCall(
+      CONTRACTS.organizationRegistry,
+      "get_org_by_owner",
+      StellarSdk.nativeToScVal(owner, { type: "address" }),
+    )) as Record<string, unknown>;
+    return mapOrg(raw);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchTotalRelationships(): Promise<number> {
   const n = await simulateCall(CONTRACTS.trustRelationship, "total_relationships");
   return Number(n);
@@ -256,8 +271,11 @@ export async function fetchTrustScore(orgId: number): Promise<number> {
   }
 }
 
-/** Load recent on-chain graph (capped for RPC budget). */
-export async function loadTrustGraph(limit = 40): Promise<{
+/** Load recent on-chain graph (capped for RPC budget). Dedupes in-flight + TTL cache. */
+export async function loadTrustGraph(
+  limit = 40,
+  opts?: { force?: boolean },
+): Promise<{
   orgs: Organization[];
   relationships: Relationship[];
   reviews: Review[];
@@ -267,39 +285,40 @@ export async function loadTrustGraph(limit = 40): Promise<{
     return { orgs: [], relationships: [], reviews: [], reputation: {} };
   }
 
-  const [orgTotal, relTotal, reviewTotal] = await Promise.all([
-    fetchTotalOrganizations().catch(() => 0),
-    fetchTotalRelationships().catch(() => 0),
-    fetchTotalReviews().catch(() => 0),
-  ]);
+  return withTrustGraphCache(async () => {
+    const [orgTotal, relTotal, reviewTotal] = await Promise.all([
+      fetchTotalOrganizations().catch(() => 0),
+      fetchTotalRelationships().catch(() => 0),
+      fetchTotalReviews().catch(() => 0),
+    ]);
 
-  const orgIds = rangeIds(orgTotal, limit);
-  const relIds = rangeIds(relTotal, limit);
-  const reviewIds = rangeIds(reviewTotal, limit);
+    const orgIds = rangeIds(orgTotal, limit);
+    const relIds = rangeIds(relTotal, limit);
+    const reviewIds = rangeIds(reviewTotal, limit);
 
-  const orgs = (
-    await Promise.all(orgIds.map((id) => fetchOrganization(id)))
-  ).filter((o): o is Organization => Boolean(o));
+    const orgs = (
+      await Promise.all(orgIds.map((id) => fetchOrganization(id)))
+    ).filter((o): o is Organization => Boolean(o));
 
-  const relationships = (
-    await Promise.all(relIds.map((id) => fetchRelationship(id)))
-  ).filter((r): r is Relationship => Boolean(r));
+    const relationships = (
+      await Promise.all(relIds.map((id) => fetchRelationship(id)))
+    ).filter((r): r is Relationship => Boolean(r));
 
-  const reviews = (
-    await Promise.all(reviewIds.map((id) => fetchReview(id)))
-  ).filter((r): r is Review => Boolean(r));
+    const reviews = (
+      await Promise.all(reviewIds.map((id) => fetchReview(id)))
+    ).filter((r): r is Review => Boolean(r));
 
-  const reputation: Record<number, ReputationScore> = {};
-  await Promise.all(
-    orgs.map(async (org) => {
-      const score = await fetchReputation(org.id);
-      const trust = score?.trustScore ?? (await fetchTrustScore(org.id));
-      org.trustScore = trust;
-      if (score) reputation[org.id] = score;
-    }),
-  );
+    const reputation: Record<number, ReputationScore> = {};
+    await Promise.all(
+      orgs.map(async (org) => {
+        const score = await fetchReputation(org.id);
+        org.trustScore = score?.trustScore ?? 0;
+        if (score) reputation[org.id] = score;
+      }),
+    );
 
-  return { orgs, relationships, reviews, reputation };
+    return { orgs, relationships, reviews, reputation };
+  }, opts);
 }
 
 export async function registerOrganization(
@@ -356,6 +375,16 @@ export async function submitReview(
       StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
       StellarSdk.nativeToScVal(rating, { type: "u32" }),
       StellarSdk.nativeToScVal(commentHash, { type: "string" }),
+    ),
+  ]);
+}
+
+export async function verifyReview(admin: string, reviewId: number): Promise<string> {
+  const contract = new Contract(CONTRACTS.reviewVerification);
+  return buildAndSend(admin, () => [
+    contract.call(
+      "verify_review",
+      StellarSdk.nativeToScVal(reviewId, { type: "u64" }),
     ),
   ]);
 }

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { contractsConfigured } from "@/lib/config";
 import { fetchContractEvents, type RawEvent } from "@/lib/contracts";
+import { classifyError } from "@/lib/errors";
 import type { ActivityEvent } from "@/lib/types";
 
 function toActivity(ev: RawEvent): ActivityEvent {
@@ -48,8 +49,11 @@ export function useEventStream(pollMs = 5000) {
         setEvents((prev) => [...fresh, ...prev].slice(0, 100));
       }
       setLive(true);
-    } catch {
+    } catch (err) {
       setLive(false);
+      if (typeof console !== "undefined") {
+        console.warn("TrustMesh event stream paused", classifyError(err).message);
+      }
     } finally {
       setLoading(false);
     }
@@ -57,7 +61,10 @@ export function useEventStream(pollMs = 5000) {
 
   useEffect(() => {
     refresh();
-    const id = setInterval(refresh, pollMs);
+    const id = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      void refresh();
+    }, pollMs);
     return () => clearInterval(id);
   }, [refresh, pollMs]);
 
