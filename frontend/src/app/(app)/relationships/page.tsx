@@ -17,6 +17,8 @@ import {
   createRelationship,
   openDispute,
 } from "@/lib/contracts";
+import { runSignedAction } from "@/lib/tx";
+import { track } from "@/lib/analyticsClient";
 import { classifyError } from "@/lib/errors";
 import { timeAgo } from "@/lib/format";
 import type { TxState } from "@/lib/types";
@@ -79,19 +81,20 @@ export default function RelationshipsPage() {
       setError(classifyError(new Error("not configured: missing contract")));
       return;
     }
-    try {
-      setTx({ phase: "signing" });
-      const hash = await createRelationship(wallet, a, b, title);
-      setTx({ phase: "success", hash });
-      toast.success("Relationship created on-chain");
-      setTitle("");
-      await refresh();
-    } catch (err) {
-      const appErr = classifyError(err);
-      setError(appErr);
-      toast.error(appErr.message);
-      setTx({ phase: "failed", error: appErr.message });
+    const result = await runSignedAction(
+      "create_relationship",
+      () => createRelationship(wallet, a, b, title),
+      (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
+    );
+    if (!result.ok) {
+      setError(result.error);
+      toast.error(result.error.message);
+      return;
     }
+    track("relationship_created");
+    toast.success("Relationship created. Both sides still need to accept.");
+    setTitle("");
+    await refresh(true);
   }
 
   async function runRelAction(
@@ -101,37 +104,37 @@ export default function RelationshipsPage() {
     setError(null);
     const wallet = await ensureWallet();
     if (!wallet) return;
-    try {
-      setTx({ phase: "signing" });
-      let hash = "";
-      if (action === "accept") hash = await acceptRelationship(wallet, relationshipId);
-      if (action === "complete") {
-        hash = await completeRelationship(wallet, relationshipId, quality);
-      }
-      if (action === "dispute") {
-        hash = await openDispute(
-          wallet,
-          relationshipId,
-          disputeReason || "Scope disagreement",
-        );
-      }
-      setTx({ phase: "success", hash });
-      toast.success(
-        action === "accept"
-          ? "Relationship accepted"
-          : action === "complete"
-            ? "Completion recorded"
-            : "Dispute opened",
-      );
+    const result = await runSignedAction(
+      action,
+      async () => {
+        if (action === "accept") return acceptRelationship(wallet, relationshipId);
+        if (action === "complete") return completeRelationship(wallet, relationshipId, quality);
+        return openDispute(wallet, relationshipId, disputeReason || "Scope disagreement");
+      },
+      (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
+    );
+    if (!result.ok) {
+      setError(result.error);
+      toast.error(result.error.message);
       setConfirm(null);
-      await refresh();
-    } catch (err) {
-      const appErr = classifyError(err);
-      setError(appErr);
-      toast.error(appErr.message);
-      setTx({ phase: "failed", error: appErr.message });
-      setConfirm(null);
+      return;
     }
+    track(
+      action === "accept"
+        ? "relationship_accepted"
+        : action === "complete"
+          ? "relationship_completed"
+          : "dispute_opened",
+    );
+    toast.success(
+      action === "accept"
+        ? "You accepted this relationship"
+        : action === "complete"
+          ? "Completion recorded"
+          : "Dispute opened",
+    );
+    setConfirm(null);
+    await refresh(true);
   }
 
   return (
@@ -233,7 +236,7 @@ export default function RelationshipsPage() {
             {address ? "Create on-chain" : "Connect wallet"}
           </Button>
           <TxStatus phase={tx.phase} hash={tx.hash} />
-          {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
+          {error && <ErrorBanner error={error} address={address} onDismiss={() => setError(null)} />}
         </form>
 
         <div className="space-y-4 lg:col-span-3">

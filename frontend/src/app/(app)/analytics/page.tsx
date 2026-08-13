@@ -1,12 +1,42 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import { EmptyState } from "@/components/ui/Badge";
 import { useTrustData } from "@/hooks/useTrustData";
 import { formatScore } from "@/lib/format";
+import {
+  loadProductEvents,
+  summarizeProductEvents,
+  type ProductEventName,
+} from "@/lib/analytics";
+import { posthogConfigured } from "@/lib/monitoring";
+
+const EVENT_LABELS: Record<ProductEventName, string> = {
+  wallet_connected: "Wallets connected",
+  wallet_disconnected: "Disconnects",
+  onboarding_started: "Onboarding started",
+  onboarding_completed: "Onboarding completed",
+  organization_created: "Organizations created",
+  relationship_created: "Relationships created",
+  relationship_accepted: "Relationships accepted",
+  relationship_completed: "Relationships completed",
+  dispute_opened: "Disputes opened",
+  review_submitted: "Reviews submitted",
+  review_verified: "Reviews verified",
+  transaction_started: "Transactions started",
+  transaction_succeeded: "Transactions succeeded",
+  transaction_failed: "Transactions failed",
+  account_funded: "Testnet accounts funded",
+};
 
 export default function AnalyticsPage() {
   const { stats, orgs, relationships, reviews, reputation } = useTrustData();
+  const [productCounts, setProductCounts] = useState<Record<ProductEventName, number> | null>(null);
+
+  useEffect(() => {
+    setProductCounts(summarizeProductEvents(loadProductEvents()));
+  }, []);
 
   const byType = orgs.reduce<Record<string, number>>((acc, org) => {
     acc[org.orgType] = (acc[org.orgType] || 0) + 1;
@@ -34,12 +64,46 @@ export default function AnalyticsPage() {
       ? 0
       : Math.round((stats.completedRels / relationships.length) * 100);
 
+  const productEntries = useMemo(
+    () =>
+      productCounts
+        ? (Object.entries(productCounts) as [ProductEventName, number][]).filter(([, n]) => n > 0)
+        : [],
+    [productCounts],
+  );
+
   return (
     <div>
       <TopBar
         title="Analytics"
-        subtitle="Network composition, relationship outcomes, and trust distribution."
+        subtitle="On-chain network stats plus product usage from this browser (no fake numbers)."
       />
+
+      <section className="mb-8 tm-surface rounded-2xl p-6">
+        <div>
+          <h2 className="font-display text-2xl text-deep">Product usage</h2>
+          <p className="mt-1 text-sm text-slate">
+            Events are stored locally in this browser. Wallet addresses are never stored in full.
+            {posthogConfigured()
+              ? " PostHog is also receiving anonymized events."
+              : " Add NEXT_PUBLIC_POSTHOG_KEY to also send events to PostHog."}
+          </p>
+        </div>
+        {productEntries.length === 0 ? (
+          <p className="mt-6 text-sm text-slate">
+            No product events yet. Connect a wallet or complete onboarding to generate real metrics.
+          </p>
+        ) : (
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {productEntries.map(([name, count]) => (
+              <div key={name} className="rounded-xl bg-foam/70 p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate">{EVENT_LABELS[name]}</p>
+                <p className="mt-2 font-display text-3xl text-deep">{count}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -58,8 +122,8 @@ export default function AnalyticsPage() {
       {orgs.length === 0 && relationships.length === 0 ? (
         <div className="mt-8 tm-surface rounded-2xl">
           <EmptyState
-            title="No analytics yet"
-            description="Charts and breakdowns populate from real on-chain organizations and relationships."
+            title="No on-chain analytics yet"
+            description="Charts fill from real organizations and relationships on Testnet."
           />
         </div>
       ) : (

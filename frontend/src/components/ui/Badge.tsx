@@ -34,14 +34,17 @@ export function Skeleton({ className }: { className?: string }) {
 export function EmptyState({
   title,
   description,
+  action,
 }: {
   title: string;
   description: string;
+  action?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <p className="font-display text-xl text-deep">{title}</p>
       <p className="mt-2 max-w-md text-sm text-slate">{description}</p>
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

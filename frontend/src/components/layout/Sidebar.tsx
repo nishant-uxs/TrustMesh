@@ -12,6 +12,7 @@ import {
   Shield,
   Star,
   Menu,
+  Sparkles,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +20,7 @@ import { clsx } from "@/lib/format";
 import { APP } from "@/lib/config";
 
 const NAV = [
+  { href: "/onboarding", label: "Get started", icon: Sparkles },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/organizations", label: "Organizations", icon: Building2 },
   { href: "/relationships", label: "Relationships", icon: GitBranch },
@@ -43,11 +45,12 @@ export function Sidebar() {
             href={href}
             onClick={() => setOpen(false)}
             className={clsx(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+              "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
               active
                 ? "bg-deep text-white shadow-sm"
                 : "text-deep/70 hover:bg-deep/5 hover:text-deep",
             )}
+            aria-current={active ? "page" : undefined}
           >
             <Icon size={18} />
             {label}
@@ -104,7 +107,7 @@ export function Sidebar() {
         {NavLinks}
         <div className="mt-auto rounded-2xl bg-foam/80 p-4 text-xs text-deep/70">
           <p className="font-medium text-deep">Stellar Testnet</p>
-          <p className="mt-1">Immutable business trust records via Soroban.</p>
+          <p className="mt-1">Public business trust records. No real money.</p>
         </div>
       </aside>
     </>

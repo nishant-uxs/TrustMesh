@@ -2,29 +2,57 @@
 
 import { useState } from "react";
 import type { AppError } from "@/lib/errors";
+import { fundTestnetAccount } from "@/lib/horizon";
+import { track } from "@/lib/analyticsClient";
+import { toast } from "@/components/providers/ToastProvider";
 import { Button } from "./Button";
 
 export function ErrorBanner({
   error,
   onDismiss,
   dismissLabel = "Dismiss",
+  address,
 }: {
   error: AppError | { message: string; technical?: string; kind?: string };
   onDismiss?: () => void;
   dismissLabel?: string;
+  address?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [funding, setFunding] = useState(false);
+  const canFund = error.kind === "AccountNotFunded" && Boolean(address);
+
+  async function onFund() {
+    if (!address) return;
+    setFunding(true);
+    try {
+      await fundTestnetAccount(address);
+      track("account_funded");
+      toast.success("Test funds added. Try the action again.");
+      onDismiss?.();
+    } catch {
+      toast.error("Could not add test funds. Wait a minute and retry.");
+    } finally {
+      setFunding(false);
+    }
+  }
+
   return (
-    <div className="tm-surface rounded-2xl border-coral/30 bg-coral/5 p-4 animate-fade-up">
+    <div
+      className="tm-surface rounded-2xl border-coral/30 bg-coral/5 p-4 animate-fade-up"
+      role="alert"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-coral">
-            {error.kind ? `${error.kind}: ` : ""}
-            {error.message}
-          </p>
+          <p className="text-sm font-semibold text-coral">{error.message}</p>
+          {canFund && (
+            <Button className="mt-3" size="sm" loading={funding} onClick={() => void onFund()}>
+              Add free Testnet funds
+            </Button>
+          )}
           {error.technical && (
             <button
-              className="mt-2 text-xs text-slate underline"
+              className="mt-2 block text-xs text-slate underline"
               onClick={() => setOpen((v) => !v)}
               type="button"
             >
@@ -58,14 +86,14 @@ export function TxStatus({
 }) {
   if (phase === "idle") return null;
   const labels: Record<string, string> = {
-    simulating: "Simulating against Soroban RPC…",
-    signing: "Waiting for wallet signature…",
-    submitted: "Submitted — confirming on Testnet…",
-    success: "Confirmed on Stellar Testnet",
-    failed: "Transaction failed",
+    simulating: "Checking this action…",
+    signing: "Approve in your wallet…",
+    submitted: "Waiting for the network to confirm…",
+    success: "Confirmed on Testnet",
+    failed: "That did not go through",
   };
   return (
-    <div className="tm-surface rounded-2xl p-4 animate-fade-up">
+    <div className="tm-surface rounded-2xl p-4 animate-fade-up" role="status">
       <p className="text-sm font-medium text-deep">{labels[phase] || message}</p>
       {hash && (
         <a
@@ -74,7 +102,7 @@ export function TxStatus({
           target="_blank"
           rel="noreferrer"
         >
-          View on Stellar Expert
+          View public receipt
         </a>
       )}
     </div>

@@ -9,10 +9,12 @@ import { ErrorBanner, TxStatus } from "@/components/ui/ErrorBanner";
 import { Pagination, SearchFilters } from "@/components/ui/SearchFilters";
 import { useTrustData } from "@/hooks/useTrustData";
 import { useWallet } from "@/hooks/useWallet";
-import { contractsConfigured } from "@/lib/config";
-import { submitReview } from "@/lib/contracts";
+import { ADMIN_ADDRESS, contractsConfigured } from "@/lib/config";
+import { submitReview, verifyReview } from "@/lib/contracts";
 import { classifyError } from "@/lib/errors";
 import { timeAgo } from "@/lib/format";
+import { runSignedAction } from "@/lib/tx";
+import { track } from "@/lib/analyticsClient";
 import type { TxState } from "@/lib/types";
 
 const PAGE_SIZE = 6;
@@ -51,6 +53,28 @@ export default function ReviewsPage() {
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const isAdmin = Boolean(address && ADMIN_ADDRESS && address === ADMIN_ADDRESS);
+
+  async function onVerify(reviewId: number) {
+    if (!address) {
+      await connect();
+      return;
+    }
+    const result = await runSignedAction(
+      "verify_review",
+      () => verifyReview(address, reviewId),
+      (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
+    );
+    if (!result.ok) {
+      setError(result.error);
+      toast.error(result.error.message);
+      return;
+    }
+    track("review_verified");
+    toast.success("Review verified. Reputation updated.");
+    await refresh(true);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -69,26 +93,20 @@ export default function ReviewsPage() {
       setError(classifyError(new Error("not configured: missing contract")));
       return;
     }
-    try {
-      setTx({ phase: "signing" });
-      const hash = await submitReview(
-        address,
-        rOrg,
-        vOrg,
-        relId,
-        rating,
-        commentHash,
-      );
-      setTx({ phase: "success", hash });
-      toast.success("Review submitted on-chain");
-      setCommentHash("");
-      await refresh();
-    } catch (err) {
-      const appErr = classifyError(err);
-      setError(appErr);
-      toast.error(appErr.message);
-      setTx({ phase: "failed", error: appErr.message });
+    const result = await runSignedAction(
+      "submit_review",
+      () => submitReview(address, rOrg, vOrg, relId, rating, commentHash),
+      (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
+    );
+    if (!result.ok) {
+      setError(result.error);
+      toast.error(result.error.message);
+      return;
     }
+    track("review_submitted");
+    toast.success("Review submitted. An admin can verify it to update reputation.");
+    setCommentHash("");
+    await refresh(true);
   }
 
   return (
@@ -191,7 +209,7 @@ export default function ReviewsPage() {
             Submit review
           </Button>
           <TxStatus phase={tx.phase} hash={tx.hash} />
-          {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
+          {error && <ErrorBanner error={error} address={address} onDismiss={() => setError(null)} />}
         </form>
 
         <div className="space-y-4 lg:col-span-3">
@@ -245,6 +263,11 @@ export default function ReviewsPage() {
                 <p className="mt-2 text-2xl text-amber">{"★".repeat(review.rating)}</p>
                 <p className="mt-1 font-mono text-xs text-slate">{review.commentHash}</p>
                 <p className="mt-2 text-xs text-slate">{timeAgo(review.submittedAt)}</p>
+                {isAdmin && review.status === "Submitted" && (
+                  <Button className="mt-3" size="sm" onClick={() => void onVerify(review.id)}>
+                    Verify review
+                  </Button>
+                )}
               </article>
             ))
           )}

@@ -5,6 +5,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { ListRowSkeleton, StatCardSkeleton } from "@/components/ui/Skeleton";
 import { useTrustData } from "@/hooks/useTrustData";
@@ -24,7 +25,7 @@ export default function DashboardPage() {
     <div>
       <TopBar
         title="Dashboard"
-        subtitle="Network health, trust signals, and live on-chain activity."
+        subtitle="Your live view of organizations, relationships, and public activity."
       />
       {error && (
         <div className="mb-6">
@@ -71,7 +72,12 @@ export default function DashboardPage() {
             <div className="tm-surface rounded-2xl">
               <EmptyState
                 title="No organizations yet"
-                description="Register an organization on-chain to populate this list."
+                description="Create yours in a few steps. It becomes a public profile others can work with."
+                action={
+                  <Link href="/onboarding">
+                    <Button size="sm">Create organization</Button>
+                  </Link>
+                }
               />
             </div>
           ) : (
@@ -111,7 +117,14 @@ export default function DashboardPage() {
               <div className="tm-surface rounded-2xl">
                 <EmptyState
                   title="No relationships yet"
-                  description="Create a trust relationship between two registered organizations."
+                  description="A relationship is a shared work record between two organizations."
+                  action={
+                    <Link href="/relationships">
+                      <Button size="sm" variant="secondary">
+                        Start a relationship
+                      </Button>
+                    </Link>
+                  }
                 />
               </div>
             ) : (

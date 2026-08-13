@@ -10,10 +10,10 @@ export default function LandingPage() {
           <p className="font-display text-xl text-deep sm:text-2xl">{APP.name}</p>
         </div>
         <Link
-          href="/dashboard"
+          href="/onboarding"
           className="min-h-11 rounded-xl bg-deep px-4 py-2.5 text-sm font-medium text-white transition hover:bg-ink"
         >
-          Open app
+          Get started
         </Link>
       </header>
 
@@ -25,21 +25,21 @@ export default function LandingPage() {
           {APP.tagline}
         </h1>
         <p className="mt-4 max-w-xl animate-fade-up text-sm leading-relaxed text-slate sm:text-base" style={{ animationDelay: "140ms" }}>
-          {APP.description} Built with advanced Soroban contracts, live event
-          streaming, and a production-ready Testnet deployment.
+          {APP.description} Connect a wallet, publish your organization, and leave
+          a public trail of completed work — not likes, not ads, not fake reviews.
         </p>
         <div className="mt-8 flex flex-col gap-3 animate-fade-up sm:mt-10 sm:flex-row sm:flex-wrap" style={{ animationDelay: "200ms" }}>
           <Link
-            href="/dashboard"
+            href="/onboarding"
             className="inline-flex min-h-12 items-center justify-center rounded-xl bg-deep px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-deep/20 transition hover:bg-ink"
           >
-            Enter dashboard
+            Get started
           </Link>
           <Link
-            href="/organizations"
+            href="/dashboard"
             className="inline-flex min-h-12 items-center justify-center rounded-xl border border-deep/15 bg-white/70 px-6 py-3 text-sm font-semibold text-deep backdrop-blur transition hover:border-sea/40"
           >
-            Browse organizations
+            View the network
           </Link>
         </div>
       </main>
@@ -48,16 +48,16 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:gap-10 sm:px-6 md:grid-cols-3">
           {[
             {
-              title: "Verifiable organizations",
-              body: "Onboard businesses, agencies, freelancers, and vendors with immutable registry records.",
+              title: "Register once",
+              body: "Publish your organization so partners can find a real, wallet-owned profile.",
             },
             {
-              title: "Trust relationships",
-              body: "Create, accept, complete, and dispute business relationships with cross-contract reputation updates.",
+              title: "Complete real work",
+              body: "Create a relationship, both sides accept, then both mark it complete.",
             },
             {
-              title: "Live reputation graph",
-              body: "Stream OrganizationRegistered, ReviewVerified, DisputeResolved, and TrustScoreUpdated events in real time.",
+              title: "Earn public reputation",
+              body: "Verified reviews and completed work update a trust score anyone can check.",
             },
           ].map((item) => (
             <div key={item.title}>

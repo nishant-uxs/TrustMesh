@@ -1,21 +1,28 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CONTRACTS, NETWORK, contractsConfigured } from "@/lib/config";
-import { explorerContractUrl, shortenAddress } from "@/lib/format";
+import { explorerContractUrl, shortenAddress, timeAgo } from "@/lib/format";
+import { loadIncidents, posthogConfigured, sentryConfigured, type Incident } from "@/lib/monitoring";
 
 export default function SettingsPage() {
   const configured = contractsConfigured();
   const { theme, toggle } = useTheme();
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+
+  useEffect(() => {
+    setIncidents(loadIncidents().slice(-8).reverse());
+  }, []);
 
   return (
     <div>
       <TopBar
         title="Settings"
-        subtitle="Network configuration, contract addresses, and wallet preferences."
+        subtitle="Network, contracts, appearance, and operational health."
       />
       <div className="grid max-w-3xl gap-6">
         <section className="tm-surface rounded-2xl p-6">
@@ -28,6 +35,46 @@ export default function SettingsPage() {
               {theme === "light" ? "Switch to dark" : "Switch to light"}
             </Button>
           </div>
+        </section>
+
+        <section className="tm-surface rounded-2xl p-6">
+          <h2 className="font-display text-xl text-deep">Monitoring</h2>
+          <p className="mt-1 text-sm text-slate">
+            Failures are stored locally in this browser. Optional Sentry is used only when a DSN is configured.
+          </p>
+          <dl className="mt-4 space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-slate">Sentry</dt>
+              <dd>
+                <Badge tone={sentryConfigured() ? "success" : "neutral"}>
+                  {sentryConfigured() ? "DSN configured" : "Local-only"}
+                </Badge>
+              </dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-slate">PostHog</dt>
+              <dd>
+                <Badge tone={posthogConfigured() ? "success" : "neutral"}>
+                  {posthogConfigured() ? "Key configured" : "Local-only"}
+                </Badge>
+              </dd>
+            </div>
+          </dl>
+          {incidents.length === 0 ? (
+            <p className="mt-4 text-sm text-slate">No captured incidents in this browser.</p>
+          ) : (
+            <ul className="mt-4 space-y-2">
+              {incidents.map((item) => (
+                <li key={item.id} className="rounded-xl bg-deep/5 px-3 py-2 text-sm">
+                  <p className="text-deep">{item.message}</p>
+                  <p className="mt-1 text-xs text-slate">
+                    {item.kind}
+                    {item.context ? ` · ${item.context}` : ""} · {timeAgo(Math.floor(item.at / 1000))}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section className="tm-surface rounded-2xl p-6">

@@ -13,6 +13,8 @@ import { useWallet } from "@/hooks/useWallet";
 import { contractsConfigured } from "@/lib/config";
 import { registerOrganization } from "@/lib/contracts";
 import { classifyError } from "@/lib/errors";
+import { runSignedAction } from "@/lib/tx";
+import { track } from "@/lib/analyticsClient";
 import type { OrgType, TxState } from "@/lib/types";
 
 const ORG_TYPES: OrgType[] = [
@@ -70,21 +72,21 @@ export default function OrganizationsPage() {
       );
       return;
     }
-    try {
-      setTx({ phase: "simulating", message: "Building register_organization…" });
-      setTx({ phase: "signing" });
-      const hash = await registerOrganization(address, name, orgType, uri);
-      setTx({ phase: "success", hash });
-      toast.success("Organization registered on Testnet");
-      setName("");
-      setUri("");
-      await refresh();
-    } catch (err) {
-      const appErr = classifyError(err);
-      setError(appErr);
-      toast.error(appErr.message);
-      setTx({ phase: "failed", error: appErr.message });
+    const result = await runSignedAction(
+      "register_organization",
+      () => registerOrganization(address, name, orgType, uri),
+      (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error, message: extra?.error }),
+    );
+    if (!result.ok) {
+      setError(result.error);
+      toast.error(result.error.message);
+      return;
     }
+    track("organization_created");
+    toast.success("Organization published. Others can now start a relationship with you.");
+    setName("");
+    setUri("");
+    await refresh(true);
   }
 
   return (
@@ -141,7 +143,7 @@ export default function OrganizationsPage() {
             {address ? "Submit on-chain" : "Connect & register"}
           </Button>
           <TxStatus phase={tx.phase} hash={tx.hash} message={tx.message} />
-          {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
+          {error && <ErrorBanner error={error} address={address} onDismiss={() => setError(null)} />}
         </form>
 
         <div className="space-y-4 lg:col-span-3">
