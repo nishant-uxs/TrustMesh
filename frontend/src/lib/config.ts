@@ -23,7 +23,9 @@ export function contractsConfigured(): boolean {
 
 export const APP = {
   name: "TrustMesh",
-  tagline: "Decentralized business trust on Stellar",
+  tagline: "Prove business trust without a middleman",
   description:
-    "Verify organizations, relationships, reviews, and reputation with immutable on-chain records.",
+    "Register your organization, complete real working relationships, collect verified reviews, and build a public reputation on Stellar Testnet.",
 };
+
+export const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_ADDRESS || "";

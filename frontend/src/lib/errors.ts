@@ -7,6 +7,7 @@ export type ErrorKind =
   | "ContractCallFailed"
   | "Network"
   | "NotConfigured"
+  | "Timeout"
   | "Unknown";
 
 export class AppError extends Error {
@@ -78,6 +79,17 @@ export function classifyError(err: unknown): AppError {
     return new AppError(
       "NotConfigured",
       "Contract addresses are not configured. Deploy contracts or set env vars.",
+      raw,
+    );
+  }
+  if (
+    lower.includes("timeout") ||
+    lower.includes("still pending") ||
+    lower.includes("timed out")
+  ) {
+    return new AppError(
+      "Timeout",
+      "The network is taking longer than expected. Wait a moment, then check Activity or try again.",
       raw,
     );
   }

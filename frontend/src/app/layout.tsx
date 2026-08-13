@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Outfit } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { OpsBootstrap } from "@/components/providers/OpsBootstrap";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.variable} ${fraunces.variable} antialiased`}>
         <ThemeProvider>
+          <OpsBootstrap />
           {children}
           <ToastProvider />
         </ThemeProvider>

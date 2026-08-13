@@ -48,6 +48,18 @@ describe("classifyError", () => {
     );
   });
 
+  it("detects timeouts", () => {
+    expect(
+      classifyError(new Error("Transaction still pending after confirmation timeout")).kind,
+    ).toBe("Timeout");
+  });
+
+  it("detects confirmation timeouts", () => {
+    expect(
+      classifyError(new Error("Transaction still pending after confirmation timeout")).kind,
+    ).toBe("Timeout");
+  });
+
   it("falls back to unknown", () => {
     const err = classifyError(new Error("something odd"));
     expect(err).toBeInstanceOf(AppError);

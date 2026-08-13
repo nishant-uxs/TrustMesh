@@ -17,14 +17,19 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("TrustMesh UI error", error, info);
+    void import("@/lib/monitoringClient").then(({ reportError }) => {
+      reportError(error, "error_boundary");
+    });
   }
 
   render() {
     if (this.state.hasError) {
       return (
         <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8 text-center">
-          <h2 className="font-display text-2xl text-deep">Something broke in the UI</h2>
-          <p className="max-w-md text-sm text-slate">{this.state.message}</p>
+          <h2 className="font-display text-2xl text-deep">This screen hit a snag</h2>
+          <p className="max-w-md text-sm text-slate">
+            Reload the page to continue. Your on-chain records are unchanged.
+          </p>
           <Button onClick={() => this.setState({ hasError: false })}>Try again</Button>
         </div>
       );
