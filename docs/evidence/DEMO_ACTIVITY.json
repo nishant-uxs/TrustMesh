@@ -1,0 +1,103 @@
+{
+  "label": "Testnet demo end-to-end walkthrough (not organic product traffic).",
+  "network": "testnet",
+  "generatedAt": "2026-08-20T16:39:34.965Z",
+  "relationshipId": 1,
+  "reviewId": 2,
+  "parties": {
+    "partyA": {
+      "identity": "demo-user-01",
+      "address": "GCK4GKBCTIASL6PPGLID6MDXKQUJT7IAZZJZIGQDFTQ2ANNS4JISCYCQ",
+      "orgId": 3
+    },
+    "partyB": {
+      "identity": "demo-user-02",
+      "address": "GC3ORHTLFIKFUZ7M4VUBZ4MYGRHJJWCXVCJ7MEOYEGF5WVPCTNIY4TKK",
+      "orgId": 4
+    },
+    "admin": "deployer"
+  },
+  "steps": [
+    {
+      "step": "verify_org_3",
+      "actor": "deployer",
+      "action": "verify_organization(3)",
+      "hash": "f7bca2e9e4e1f222b16f22e690f72ab62b2a38b15978162b4960aed9ffcf14e1",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/f7bca2e9e4e1f222b16f22e690f72ab62b2a38b15978162b4960aed9ffcf14e1",
+      "timestamp": "2026-08-20T16:38:23.894Z",
+      "note": "Admin-only step required before create_relationship."
+    },
+    {
+      "step": "verify_org_4",
+      "actor": "deployer",
+      "action": "verify_organization(4)",
+      "hash": "739810437c4c136998887fff1088a69e0085501c8f0d3653570c1a99117b8d32",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/739810437c4c136998887fff1088a69e0085501c8f0d3653570c1a99117b8d32",
+      "timestamp": "2026-08-20T16:38:28.923Z",
+      "note": "Admin-only step required before create_relationship."
+    },
+    {
+      "step": "create_relationship",
+      "actor": "demo-user-01",
+      "action": "factory.create_relationship",
+      "hash": "e1c9ce9777eb0ab135a3de0e1c4050eaf1d50008388bcd4a016abcc0e2c66db0",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/e1c9ce9777eb0ab135a3de0e1c4050eaf1d50008388bcd4a016abcc0e2c66db0",
+      "timestamp": "2026-08-20T16:38:41.444Z",
+      "note": null
+    },
+    {
+      "step": "demo-user-01_accept",
+      "actor": "demo-user-01",
+      "action": "accept(relationship 1)",
+      "hash": "cb2832f1655fd53d85e8c2ebcd1226ada54fe5697b3522ef0547815c2df86a8c",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/cb2832f1655fd53d85e8c2ebcd1226ada54fe5697b3522ef0547815c2df86a8c",
+      "timestamp": "2026-08-20T16:38:51.390Z",
+      "note": null
+    },
+    {
+      "step": "demo-user-02_accept",
+      "actor": "demo-user-02",
+      "action": "accept(relationship 1)",
+      "hash": "16817d236022b4a6d1510d15e4e9feb66aa00fc60ca6798b0f02b8c452f6a7d4",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/16817d236022b4a6d1510d15e4e9feb66aa00fc60ca6798b0f02b8c452f6a7d4",
+      "timestamp": "2026-08-20T16:39:01.202Z",
+      "note": null
+    },
+    {
+      "step": "demo-user-01_complete",
+      "actor": "demo-user-01",
+      "action": "complete(relationship 1, quality 88)",
+      "hash": "2a6135789959862407278631b44891ab3b4a5c4c0a4f384900cdc3daa91ca775",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/2a6135789959862407278631b44891ab3b4a5c4c0a4f384900cdc3daa91ca775",
+      "timestamp": "2026-08-20T16:39:10.787Z",
+      "note": "Both parties must complete; second call marks Completed and updates reputation."
+    },
+    {
+      "step": "demo-user-02_complete",
+      "actor": "demo-user-02",
+      "action": "complete(relationship 1, quality 90)",
+      "hash": "3cf7f44d82874c51929295df84486cd4e6c911cb9dcf1433cb5ee0a154f4ff8f",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/3cf7f44d82874c51929295df84486cd4e6c911cb9dcf1433cb5ee0a154f4ff8f",
+      "timestamp": "2026-08-20T16:39:19.118Z",
+      "note": "Both parties must complete; second call marks Completed and updates reputation."
+    },
+    {
+      "step": "submit_review",
+      "actor": "demo-user-01",
+      "action": "submit_review",
+      "hash": "3197d4e43a09f42f5d904ab6e0298af6dfac99a3aa5e72ee4048554feb859b4c",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/3197d4e43a09f42f5d904ab6e0298af6dfac99a3aa5e72ee4048554feb859b4c",
+      "timestamp": "2026-08-20T16:39:24.279Z",
+      "note": null
+    },
+    {
+      "step": "verify_review",
+      "actor": "deployer",
+      "action": "verify_review(2)",
+      "hash": "e6b714b0a00b42427e2077e9e4dadbd806ae0ad78c0b2a0f6b12e6a7ae76d31c",
+      "explorerUrl": "https://stellar.expert/explorer/testnet/tx/e6b714b0a00b42427e2077e9e4dadbd806ae0ad78c0b2a0f6b12e6a7ae76d31c",
+      "timestamp": "2026-08-20T16:39:34.963Z",
+      "note": "Admin-only reputation promotion after user submit_review."
+    }
+  ]
+}
