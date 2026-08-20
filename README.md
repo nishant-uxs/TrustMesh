@@ -1,6 +1,14 @@
 # TrustMesh
 
-**Decentralized business trust & reputation on Stellar Soroban**
+**Decentralized business trust & reputation on Stellar Soroban.**
+
+TrustMesh is trust infrastructure for businesses, startups, agencies, freelancers, vendors, and service providers — not crowdfunding, not escrow, not NFTs, not a DAO, not CRM, and not a social network.
+
+Organizations establish **verifiable trust** through completed relationships, verified reviews, dispute history, reputation scores, and an immutable on-chain event trail.
+
+**Green Belt MVP** on the existing Orange Belt contracts. Six cooperating Soroban programs, live Testnet deployment, and an empty-ledger honesty policy stay in place. Green Belt work is onboarding, a complete trust workflow, real analytics/monitoring, and production UX.
+
+Green Belt docs: [`docs/GREEN_BELT_CHECKLIST.md`](./docs/GREEN_BELT_CHECKLIST.md) · [`docs/GREEN_BELT_EVIDENCE.md`](./docs/GREEN_BELT_EVIDENCE.md) · [`docs/evidence/`](./docs/evidence/)
 
 [![Live Demo](https://img.shields.io/badge/Live-trust--mesh--taupe.vercel.app-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://trust-mesh-taupe.vercel.app)
 [![Stellar](https://img.shields.io/badge/Network-Testnet-7D00FF?style=for-the-badge&logo=stellar)](https://stellar.expert/explorer/testnet)
@@ -10,20 +18,39 @@
 
 ---
 
-## Overview
+## Problem
 
-TrustMesh is trust infrastructure for businesses, startups, agencies, freelancers, vendors, and service providers — not crowdfunding, not escrow, not NFTs, not a DAO, not CRM, and not LinkedIn.
+Business trust still lives in PDFs, screenshots, and platforms that own the data. Relationship history, review verification, and dispute outcomes are hard for a counterparty to audit independently.
 
-Organizations establish **verifiable trust** through completed relationships, verified reviews, dispute history, reputation scores, and immutable on-chain records.
+## Solution
 
-| | |
+A Stellar Testnet console where a wallet registers an organization, an admin verifies it, parties create and complete a trust relationship through the factory, reviewers submit scored feedback, and reputation updates on-chain — with a public activity trail and explorer-linked receipts.
+
+## Target users
+
+| Role | First meaningful action |
 |---|---|
-| **Live demo** | https://trust-mesh-taupe.vercel.app |
-| **Network** | Stellar Testnet · Soroban |
-| **Stack** | Next.js 15 · TypeScript · Rust · 6 Soroban contracts |
-| **Program** | Stellar Journey to Mastery — Green Belt |
+| Business / buyer | Register an organization, then start a relationship |
+| Freelancer / agency | Complete work on-chain and collect a verified review |
+| Supplier / vendor | Get listed under an org and build a public score |
+| Platform admin | Verify organizations and reviews (auth-gated) |
+| Observer | Read the public ledger / activity without inventing data |
 
-Built as a production MVP on the existing Orange Belt contract foundation.
+---
+
+## Why TrustMesh stands out
+
+| Capability | TrustMesh |
+|---|---|
+| Contract surface | **Six** single-responsibility Soroban contracts |
+| Factory orchestration | Verified orgs → create relationship → track reputation → record fee in one flow |
+| Reputation | Scores from completions, verified reviews, and dispute outcomes |
+| Treasury | Fee config + deposits; optional SAC custody for token pulls / skim |
+| Console honesty | **Empty-by-default** — no fake seed balances or invented charts |
+| Wallet UX | Picker every connect (**Freighter / xBull / LOBSTR / Albedo / Hana / Rabet**) |
+| Signing | Simulate → assemble → wallet-sign → submit for register / relationships / reviews |
+| Transparency | Explorer-linked contract IDs + activity from RPC `getEvents` |
+| Auth boundaries | Factory-gated create · admin verify · owner-only accept/complete/submit |
 
 ---
 
@@ -31,13 +58,25 @@ Built as a production MVP on the existing Orange Belt contract foundation.
 
 | | Link |
 |---|---|
-| **GitHub repo** | https://github.com/nishant-uxs/TrustMesh |
-| **Green CI/CD run** | https://github.com/nishant-uxs/TrustMesh/actions/runs/30162067608 |
-| **First deploy tx (testnet)** | https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0 |
-| **Sample register tx** | https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24 |
-| **Sample verify tx** | https://stellar.expert/explorer/testnet/tx/be97ac73cf039396e1957ea0fdfa88ed328586cccc1c6ec02c985ffefc608d76 |
-| **Demo video** | https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing |
 | **Live app (Vercel)** | https://trust-mesh-taupe.vercel.app/ |
+| **Demo video** (Orange Belt walkthrough) | https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing |
+| **GitHub** | https://github.com/nishant-uxs/TrustMesh |
+| **Green CI/CD run** | https://github.com/nishant-uxs/TrustMesh/actions/runs/30162067608 |
+| **Organization Registry** | [`CD6AAYZ7…NRZT`](https://stellar.expert/explorer/testnet/contract/CD6AAYZ7IVW6SQDP6NRKRZ3QIRQQPB3ZDRKTSA7ZBU2VRWN4VM4ZNRZT) |
+| **Reputation** | [`CDYSM4LG…RBL5`](https://stellar.expert/explorer/testnet/contract/CDYSM4LG4OUPSXGDDSJMZK7H532223GNBAF6I5RAYAFG74HD5QRPRBL5) |
+| **Treasury** | [`CA63C3PL…MONH`](https://stellar.expert/explorer/testnet/contract/CA63C3PLR2GQRNLES6JO72YPFO6HWUYLVWFPZBNY47BRZPYSPUGWMONH) |
+| **Trust Relationship** | [`CBCTIWGK…LDXJ`](https://stellar.expert/explorer/testnet/contract/CBCTIWGKIIGMDMJNPGT4OLVITGTVTW3JFTMHKYBOT42ENZZWEITJLDXJ) |
+| **Trust Relationship Factory** | [`CBF5KOXX…JGHK`](https://stellar.expert/explorer/testnet/contract/CBF5KOXX34HEF3Q6ECLWQY543V53HJRJ25W5X3DO6O2XII4GP2FHJGHK) |
+| **Review Verification** | [`CBXOCI2B…J3KF`](https://stellar.expert/explorer/testnet/contract/CBXOCI2BQTCDUJOVJCAC7TQLBA5HNGVU7UQ5JDLJF44ZHOZBG4PLJ3KF) |
+| **First deploy tx** | [`384cb67c…fcd0`](https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0) |
+| **Sample register tx** | [`fa96bc2e…0a24`](https://stellar.expert/explorer/testnet/tx/fa96bc2eefc492914cfd0641a667fb0df03b0be12ba3c3a97e67dcd5cd960a24) |
+| **10+ unique Testnet wallets** | [`docs/evidence/WALLET_INTERACTIONS.md`](./docs/evidence/WALLET_INTERACTIONS.md) |
+| **E2E trust lifecycle** | [`docs/evidence/DEMO_ACTIVITY.md`](./docs/evidence/DEMO_ACTIVITY.md) |
+| **Feedback summary** | [`docs/evidence/FEEDBACK_SUMMARY.md`](./docs/evidence/FEEDBACK_SUMMARY.md) |
+
+> Live IDs also live in [`deployments/testnet.json`](./deployments/testnet.json) and [`frontend/public/contracts.json`](./frontend/public/contracts.json).
+
+Those wallet rows are **Testnet demo identities** with signed contract calls — **not organic users**. Secrets are not in git.
 
 ### Screenshots
 
@@ -46,104 +85,46 @@ Built as a production MVP on the existing Orange Belt contract foundation.
   &nbsp;&nbsp;
   <img src="./docs/screenshots/mobile-dashboard.png" alt="TrustMesh mobile dashboard" width="280" />
 </p>
-
 <p align="center"><em>Mobile-responsive landing + dashboard (390×844)</em></p>
 
 <p align="center">
   <img src="./docs/screenshots/desktop-landing.png" alt="TrustMesh desktop landing" width="720" />
 </p>
-
 <p align="center"><em>Desktop landing</em></p>
 
 <p align="center">
   <img src="./docs/screenshots/desktop-organizations.png" alt="Organizations with search filters" width="720" />
 </p>
-
 <p align="center"><em>Organizations — search, filters, on-chain register</em></p>
 
 <p align="center">
   <img src="./docs/screenshots/desktop-relationships.png" alt="Relationships with confirm actions" width="720" />
 </p>
-
-<p align="center"><em>Relationships — lifecycle actions + confirm dialogs</em></p>
-
-<p align="center">
-  <img src="./docs/screenshots/desktop-settings.png" alt="Settings contracts + theme" width="720" />
-</p>
-
-<p align="center"><em>Settings — network, 6 contract IDs, light/dark theme</em></p>
+<p align="center"><em>Relationships — accept / complete + confirm dialogs</em></p>
 
 <p align="center">
   <img src="./docs/screenshots/analytics.png" alt="Analytics with live Testnet counts" width="720" />
 </p>
-
-<p align="center"><em>Analytics — live Testnet org/relationship counts; product events are this-browser only (empty until recorded)</em></p>
+<p align="center"><em>Analytics — live Testnet org/relationship counts; product events stay empty until this browser records them</em></p>
 
 <p align="center">
   <img src="./docs/screenshots/monitoring.png" alt="Settings monitoring local-only" width="720" />
 </p>
-
-<p align="center"><em>Monitoring — Sentry/PostHog local-only unless env keys are set; no fake incidents</em></p>
+<p align="center"><em>Monitoring — PostHog / Sentry stay local-only unless env keys are set</em></p>
 
 <p align="center">
   <img src="./docs/screenshots/feedback-summary.png" alt="In-app feedback owner summary" width="720" />
 </p>
-
-<p align="center"><em>Feedback — demo-tester notes stored in this browser (not organic remote users)</em></p>
+<p align="center"><em>Feedback — demo-tester notes in this browser (see docs/evidence/FEEDBACK_SUMMARY.md)</em></p>
 
 <p align="center">
   <img src="./docs/screenshots/ci-green-run.png" alt="Green GitHub Actions CI run" width="720" />
 </p>
+<p align="center"><em>CI/CD — Contracts (test + WASM) → Frontend (lint / typecheck / test / build) → Deploy gate</em></p>
 
-<p align="center"><em>CI/CD — Contracts (test + WASM) → Frontend (lint/typecheck/test/build) → Deploy gate</em></p>
+More screenshots: [`docs/screenshots/`](./docs/screenshots/)
 
-Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md) · env: [`deployments/testnet.env`](./deployments/testnet.env)
-
-Green Belt evidence (Testnet demo identities, not organic users):
-
-- Wallet interactions: [`docs/evidence/WALLET_INTERACTIONS.md`](./docs/evidence/WALLET_INTERACTIONS.md)
-- End-to-end demo activity: [`docs/evidence/DEMO_ACTIVITY.md`](./docs/evidence/DEMO_ACTIVITY.md)
-- Feedback summary: [`docs/evidence/FEEDBACK_SUMMARY.md`](./docs/evidence/FEEDBACK_SUMMARY.md)
-
----
-
-## Why it stands out
-
-- **Six cooperating Soroban contracts** with explicit admin + authorized-caller boundaries
-- **Factory orchestration** that talks to registry, relationship, reputation, and treasury in one flow
-- **Reputation scoring** from completions, verified reviews, and dispute outcomes
-- **SAC-backed treasury** — optional Stellar Asset Contract custody for deposits, fee pulls, and fee skim
-- **Wallet picker on connect** (Freighter / xBull / LOBSTR / Albedo / Hana / Rabet)
-- **Freighter-signed invokes** for register / relationships / reviews (real Testnet txs)
-- **Empty-by-default console** — no seed tables, no fake balances
-- **Search, filters, pagination, toasts, confirm dialogs, light/dark theme**
-- **Guided first-time onboarding** (wallet → role → organization → next action)
-- **Privacy-first product analytics** (local events + optional PostHog)
-- **Error monitoring** (local incidents + optional Sentry)
-- **Live Testnet deployment** with contract IDs + transaction hashes
-- **Event streaming** via RPC `getEvents` into a live activity timeline
-
----
-
-## Product
-
-**Problem.** Businesses still prove trust with PDFs, screenshots, and platforms that own the data.
-
-**Solution.** TrustMesh records organizations, working relationships, reviews, and reputation on Stellar Testnet so a partner can verify the trail themselves.
-
-### User flow
-
-```mermaid
-flowchart LR
-  A[Connect wallet] --> B[Choose role]
-  B --> C[Publish organization]
-  C --> D[Create relationship]
-  D --> E[Accept / complete]
-  E --> F[Submit review]
-  F --> G[Public reputation + activity]
-```
-
-Guided setup lives at `/onboarding`. Human-language copy explains each wallet approval. Failed actions stay off-chain and offer a retry (including free Testnet funding via Friendbot).
+**Test output:** 39 smart-contract tests (`cargo test --workspace`) plus frontend Vitest. See CI.
 
 ---
 
@@ -173,7 +154,7 @@ flowchart TB
   UI --> REP
   UI --> TR
 
-  FAC -->|get_organization| REG
+  FAC -->|get_organization / is_verified| REG
   FAC -->|create| REL
   FAC -->|ensure_tracked| REP
   FAC -->|record_fee| TR
@@ -198,8 +179,8 @@ sequenceDiagram
 
   Owner->>Registry: register_organization
   Admin->>Registry: verify_organization
-  Owner->>Factory: create_relationship
-  Factory->>Registry: get_organization
+  Note over Factory: owner signs create_relationship
+  Factory->>Registry: get_organization / is_verified
   Factory->>Rel: create
   Factory->>Rep: ensure_tracked
   Factory->>Treasury: record_fee
@@ -216,14 +197,14 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  Admin -->|initialize / set_authorized| AllContracts
+  Admin -->|initialize / set_authorized / verify| Core
   Factory -->|create| Relationship
   Factory -->|ensure_tracked| Reputation
   Factory -->|record_fee| Treasury
   Relationship -->|score updates| Reputation
   Reviews -->|record_verified_review| Reputation
   Reviews -->|record_fee| Treasury
-  Owner -->|register / accept / submit| RegistryRelReviews
+  Owner -->|register / accept / complete / submit| UserPaths
 ```
 
 ---
@@ -239,26 +220,25 @@ flowchart LR
 | Trust Relationship Factory | [`CBF5KOXX…JGHK`](https://stellar.expert/explorer/testnet/contract/CBF5KOXX34HEF3Q6ECLWQY543V53HJRJ25W5X3DO6O2XII4GP2FHJGHK) | Cross-contract relationship orchestration |
 | Review Verification | [`CBXOCI2B…J3KF`](https://stellar.expert/explorer/testnet/contract/CBXOCI2BQTCDUJOVJCAC7TQLBA5HNGVU7UQ5JDLJF44ZHOZBG4PLJ3KF) | Submit / verify / reject reviews |
 
-**First deploy transaction:**  
-`384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0`  
-Explorer: https://stellar.expert/explorer/testnet/tx/384cb67cad2cdcc4c27dc50bb445aed03da1c7619e0d3cec78ac78f80ba7fcd0
+Full IDs: [`deployments/testnet.json`](./deployments/testnet.json)
 
 ### Events emitted
 
-`OrganizationRegistered` · `OrganizationVerified` · `RelationshipCreated` · `RelationshipCompleted` · `ReviewSubmitted` · `ReviewVerified` · `ReputationUpdated` · `TrustScoreUpdated` · `DisputeOpened` · `DisputeResolved`
+`OrganizationRegistered` · `OrganizationVerified` · `RelationshipCreated` · `RelationshipCompleted` · `ReviewSubmitted` · `ReviewVerified` · `ReputationUpdated` · `TrustScoreUpdated` · `DisputeOpened` · `DisputeResolved` · `TreasuryDeposit`
 
 ---
 
 ## Repository layout
 
 ```
-.
-├── contracts/                 # Soroban workspace (6 crates + tests)
+TrustMesh/
+├── contracts/                 # 6 Soroban crates + tests
 ├── frontend/                  # Next.js 15 · TypeScript · Tailwind
-├── scripts/                   # deploy.sh + deploy.ps1
-├── deployments/               # Live testnet addresses + tx hashes
-├── docs/                      # Architecture + demo notes
-├── .github/workflows/ci.yml   # cargo test ‖ npm test/lint/build
+├── scripts/                   # deploy, demo-users, demo-activity
+├── deployments/testnet.json   # Live addresses + deploy tx
+├── docs/                      # Architecture, Green Belt, evidence, screenshots
+├── .github/workflows/ci.yml
+├── Makefile
 └── README.md
 ```
 
@@ -273,17 +253,24 @@ Every push / PR on `master` runs a gated pipeline:
 CI: [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)  
 **Latest green run:** https://github.com/nishant-uxs/TrustMesh/actions/runs/30162067608
 
-![Green CI run](./docs/screenshots/ci-green-run.png)
-
 ---
 
 ## Quick start
 
 ### Prerequisites
 
-- Rust stable + wasm target (`wasm32v1-none`)
+- Rust stable + `wasm32v1-none`
 - [Stellar CLI](https://developers.stellar.org/docs/tools/cli) v25+
 - Node.js 20+
+- Freighter (or another supported wallet)
+
+### One-liners
+
+```bash
+make test           # contracts + frontend
+make frontend-dev   # http://localhost:3000
+make deploy         # testnet (funded deployer key)
+```
 
 ### Contracts
 
@@ -302,48 +289,83 @@ bash scripts/deploy.sh --source deployer --network testnet
 ```bash
 cd frontend
 cp ../deployments/testnet.env .env.local
-# optional: PostHog / Sentry keys from frontend/.env.example
+# optional ops keys — see frontend/.env.example
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000
+Open http://localhost:3000 then `/onboarding` for first-run roles.
 
-### Redeploy (optional)
+### Demo evidence scripts (optional)
 
 ```bash
-stellar keys fund deployer --network testnet
-.\scripts\deploy.ps1 -Source deployer -Network testnet
+node scripts/demo-users.mjs --count 10
+node scripts/demo-activity.mjs
 ```
-
-Then refresh `frontend/.env.local` from `deployments/testnet.env`.
 
 ---
 
-## Frontend
+## User flow
 
-Pages: Landing · Get started · Dashboard · Organizations · Relationships · Reputation · Reviews · Analytics · Activity · Public Profile · Settings
+1. Connect a Stellar wallet (picker every time)
+2. Choose a role and create a profile (`/onboarding`)
+3. Register an organization (`/organizations`); admin verifies it
+4. Create a relationship (`/relationships`) — factory checks both orgs are verified
+5. Both parties **accept**, then **complete** (quality score)
+6. Submit a review (`/reviews`); admin can verify
+7. Reputation + analytics + activity update from the live ledger (empty until data exists)
 
-Quality bar:
+This product has no separate milestone / escrow-release methods; **accept → complete** is the lifecycle.
 
-- Guided onboarding for first-time users
-- Multi-wallet connect modal
-- Light / dark theme
-- Search + status filters + pagination
-- Toasts + confirm dialogs
-- Transaction panels that say what to do next
-- Skeletons + empty states with a next action (no fake seed data)
-- Classified wallet / RPC / contract errors with recovery
-- Product analytics + monitoring panels
-- Live activity feed from contract events
-- Responsive desktop / tablet / mobile layout
+```mermaid
+flowchart LR
+  A[Connect wallet] --> B[Choose role]
+  B --> C[Publish organization]
+  C --> D[Admin verifies]
+  D --> E[Create relationship]
+  E --> F[Accept / complete]
+  F --> G[Submit review]
+  G --> H[Public reputation + activity]
+```
+
+---
+
+## Frontend quality bar
+
+Pages: Landing · Get started · Dashboard · Organizations · Relationships · Reputation · Reviews · Analytics · Feedback · Activity · Public Profile · Settings
+
+- Wallet choice modal on every connect (Freighter / xBull / LOBSTR / Albedo / Hana / Rabet)
+- Transaction panels: simulating → signing → submitted → confirmed / failed + explorer link
+- Human-language copy for each approval; Friendbot recovery when the account is unfunded
+- Skeletons, empty states, confirm dialogs, toasts
+- Search / filters / pagination
+- Charts stay empty until RPC returns orgs/relationships; product analytics stay at zero until real events
+- Full signed flows: org register, factory create, accept/complete, submit/verify review
+- Production invoke path: simulate → assemble → sign → submit
+- Light / dark theme · responsive desktop / tablet / mobile
+
+---
+
+## Environment variables
+
+The app runs without remote ops tools. Optional keys live in `frontend/.env.local` (see `frontend/.env.example`):
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_*_ID` contract IDs | Yes (from `deployments/testnet.env`) | Live Testnet contracts |
+| `NEXT_PUBLIC_ADMIN_ADDRESS` | No | UI gates for admin-only actions |
+| `NEXT_PUBLIC_POSTHOG_KEY` | No | Product analytics (also stored locally) |
+| `NEXT_PUBLIC_POSTHOG_HOST` | No | PostHog host |
+| `NEXT_PUBLIC_SENTRY_DSN` | No | Error monitoring (also stored locally) |
+
+Never put seed phrases or deployer secrets in frontend env.
 
 ---
 
 ## Analytics & monitoring
 
-- **Analytics:** local product events (see Analytics page). Optional PostHog via `NEXT_PUBLIC_POSTHOG_KEY`. Docs: [`docs/ANALYTICS.md`](./docs/ANALYTICS.md)
-- **Monitoring:** local incident log (see Settings). Optional Sentry via `NEXT_PUBLIC_SENTRY_DSN`. Docs: [`docs/MONITORING.md`](./docs/MONITORING.md)
+- **Analytics:** local product events (Analytics page). Optional PostHog. Docs: [`docs/ANALYTICS.md`](./docs/ANALYTICS.md)
+- **Monitoring:** local incident log (Settings). Optional Sentry. Docs: [`docs/MONITORING.md`](./docs/MONITORING.md)
 
 Neither integration runs unless the env var is set. No secrets belong in git.
 
@@ -367,13 +389,13 @@ npm run build
 
 ## Demo video
 
-**Watch:** https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing
+**Watch (Orange Belt recording):** https://drive.google.com/file/d/1GWH_qCdsZ1c9zzUfPgUF_nY-hmoOfmzN/view?usp=sharing
 
 Recording script: [`docs/DEMO_VIDEO.md`](./docs/DEMO_VIDEO.md)
 
 Suggested 90s flow: landing → Get started → connect wallet → Friendbot (optional) → choose role → publish organization (sign) → public receipt → start a relationship.
 
-Green Belt evidence template: [`docs/GREEN_BELT_EVIDENCE.md`](./docs/GREEN_BELT_EVIDENCE.md) · filled artifacts under [`docs/evidence/`](./docs/evidence/)
+Filled Green Belt artifacts: [`docs/evidence/`](./docs/evidence/) · template: [`docs/GREEN_BELT_EVIDENCE.md`](./docs/GREEN_BELT_EVIDENCE.md)
 
 ---
 
@@ -394,8 +416,10 @@ Mapped requirement → implementation: [`docs/GREEN_BELT_CHECKLIST.md`](./docs/G
 - [x] Frontend tests expanded
 - [x] CI/CD (lint, typecheck, tests, WASM, build)
 - [x] Production documentation
+- [x] Real Testnet wallet evidence + e2e demo hashes
+- [x] In-app feedback (demo testers, local storage)
 
-Orange Belt contract map remains in [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/ORANGE_BELT_CHECKLIST.md)
+Orange Belt contract map: [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/ORANGE_BELT_CHECKLIST.md)
 
 ---
 
@@ -415,4 +439,4 @@ Orange Belt contract map remains in [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/ORA
 
 ## License
 
-MIT
+MIT — see [`LICENSE`](./LICENSE). Contributions: [`CONTRIBUTING.md`](./CONTRIBUTING.md).
