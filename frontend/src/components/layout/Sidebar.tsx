@@ -8,6 +8,7 @@ import {
   Building2,
   GitBranch,
   LayoutDashboard,
+  MessageSquare,
   Settings,
   Shield,
   Star,
@@ -27,6 +28,7 @@ const NAV = [
   { href: "/reputation", label: "Reputation", icon: Shield },
   { href: "/reviews", label: "Reviews", icon: Star },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
