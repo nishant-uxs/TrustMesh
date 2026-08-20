@@ -9,10 +9,23 @@ import type {
   ReputationScore,
   Review,
   ReviewStatus,
+  TxPhase,
 } from "./types";
-import { signTransactionXdr } from "./wallets";
+import { assertWalletOnTestnet, signTransactionXdr } from "./wallets";
 import { rangeIds } from "./graph";
 import { invalidateTrustGraph, withTrustGraphCache } from "./graphCache";
+
+export type TxPhaseReporter = (phase: TxPhase, extra?: { hash?: string; error?: string }) => void;
+
+function summarizeSendError(errorResult: unknown): string {
+  try {
+    const text = JSON.stringify(errorResult);
+    if (text.length > 800) return `${text.slice(0, 800)}…`;
+    return text;
+  } catch {
+    return String(errorResult);
+  }
+}
 
 const { Contract, rpc, TransactionBuilder, Account, BASE_FEE } = StellarSdk;
 
@@ -37,10 +50,24 @@ export function requireContracts(): void {
 async function buildAndSend(
   source: string,
   buildOps: () => StellarSdk.xdr.Operation[],
+  report?: TxPhaseReporter,
 ): Promise<string> {
   requireContracts();
+  await assertWalletOnTestnet();
   const server = getServer();
-  const account = await server.getAccount(source);
+
+  report?.("simulating");
+  let account: StellarSdk.Account;
+  try {
+    account = await server.getAccount(source);
+  } catch (err) {
+    throw new AppError(
+      "AccountNotFunded",
+      "This account is not funded on Testnet. Use Friendbot first.",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+
   const tx = new TransactionBuilder(account, {
     fee: BASE_FEE,
     networkPassphrase: NETWORK.passphrase,
@@ -50,14 +77,32 @@ async function buildAndSend(
     tx.addOperation(op);
   }
 
-  const prepared = await server.prepareTransaction(tx.setTimeout(180).build());
+  let prepared: StellarSdk.Transaction;
+  try {
+    prepared = await server.prepareTransaction(tx.setTimeout(180).build());
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new AppError(
+      "ContractCallFailed",
+      "Simulation failed — the contract rejected this action before signing.",
+      raw,
+    );
+  }
+
+  report?.("signing");
   const signed = await signTransactionXdr(prepared.toXDR(), source);
   const parsed = TransactionBuilder.fromXDR(signed, NETWORK.passphrase);
   const result = await server.sendTransaction(parsed);
 
   if (result.status === "ERROR") {
-    throw new Error(`Transaction error: ${JSON.stringify(result.errorResult)}`);
+    throw new AppError(
+      "ContractCallFailed",
+      "The network rejected this transaction.",
+      summarizeSendError(result.errorResult),
+    );
   }
+
+  report?.("submitted", { hash: result.hash });
 
   let attempts = 0;
   while (attempts < 30) {
@@ -68,11 +113,19 @@ async function buildAndSend(
       return result.hash;
     }
     if (get.status === rpc.Api.GetTransactionStatus.FAILED) {
-      throw new Error(`Transaction failed: ${result.hash}`);
+      throw new AppError(
+        "ContractCallFailed",
+        "The smart contract rejected this transaction after submit.",
+        `Failed hash: ${result.hash}`,
+      );
     }
     attempts += 1;
   }
-  throw new Error(`Transaction still pending after confirmation timeout: ${result.hash}`);
+  throw new AppError(
+    "Timeout",
+    "The network is taking longer than expected. Wait a moment, then check Activity or try again.",
+    `Pending hash: ${result.hash}`,
+  );
 }
 
 async function simulateCall(
@@ -326,17 +379,22 @@ export async function registerOrganization(
   name: string,
   orgType: string,
   metadataUri: string,
+  report?: TxPhaseReporter,
 ): Promise<string> {
   const contract = new Contract(CONTRACTS.organizationRegistry);
-  return buildAndSend(owner, () => [
-    contract.call(
-      "register_organization",
-      StellarSdk.nativeToScVal(owner, { type: "address" }),
-      StellarSdk.nativeToScVal(name, { type: "string" }),
-      StellarSdk.xdr.ScVal.scvVec([StellarSdk.xdr.ScVal.scvSymbol(orgType)]),
-      StellarSdk.nativeToScVal(metadataUri, { type: "string" }),
-    ),
-  ]);
+  return buildAndSend(
+    owner,
+    () => [
+      contract.call(
+        "register_organization",
+        StellarSdk.nativeToScVal(owner, { type: "address" }),
+        StellarSdk.nativeToScVal(name, { type: "string" }),
+        StellarSdk.xdr.ScVal.scvVec([StellarSdk.xdr.ScVal.scvSymbol(orgType)]),
+        StellarSdk.nativeToScVal(metadataUri, { type: "string" }),
+      ),
+    ],
+    report,
+  );
 }
 
 export async function createRelationship(
@@ -344,17 +402,22 @@ export async function createRelationship(
   orgA: number,
   orgB: number,
   title: string,
+  report?: TxPhaseReporter,
 ): Promise<string> {
   const contract = new Contract(CONTRACTS.trustRelationshipFactory);
-  return buildAndSend(creator, () => [
-    contract.call(
-      "create_relationship",
-      StellarSdk.nativeToScVal(creator, { type: "address" }),
-      StellarSdk.nativeToScVal(orgA, { type: "u64" }),
-      StellarSdk.nativeToScVal(orgB, { type: "u64" }),
-      StellarSdk.nativeToScVal(title, { type: "string" }),
-    ),
-  ]);
+  return buildAndSend(
+    creator,
+    () => [
+      contract.call(
+        "create_relationship",
+        StellarSdk.nativeToScVal(creator, { type: "address" }),
+        StellarSdk.nativeToScVal(orgA, { type: "u64" }),
+        StellarSdk.nativeToScVal(orgB, { type: "u64" }),
+        StellarSdk.nativeToScVal(title, { type: "string" }),
+      ),
+    ],
+    report,
+  );
 }
 
 export async function submitReview(
@@ -364,75 +427,98 @@ export async function submitReview(
   relationshipId: number,
   rating: number,
   commentHash: string,
+  report?: TxPhaseReporter,
 ): Promise<string> {
   const contract = new Contract(CONTRACTS.reviewVerification);
-  return buildAndSend(reviewer, () => [
-    contract.call(
-      "submit_review",
-      StellarSdk.nativeToScVal(reviewer, { type: "address" }),
-      StellarSdk.nativeToScVal(reviewerOrg, { type: "u64" }),
-      StellarSdk.nativeToScVal(revieweeOrg, { type: "u64" }),
-      StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
-      StellarSdk.nativeToScVal(rating, { type: "u32" }),
-      StellarSdk.nativeToScVal(commentHash, { type: "string" }),
-    ),
-  ]);
+  return buildAndSend(
+    reviewer,
+    () => [
+      contract.call(
+        "submit_review",
+        StellarSdk.nativeToScVal(reviewer, { type: "address" }),
+        StellarSdk.nativeToScVal(reviewerOrg, { type: "u64" }),
+        StellarSdk.nativeToScVal(revieweeOrg, { type: "u64" }),
+        StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
+        StellarSdk.nativeToScVal(rating, { type: "u32" }),
+        StellarSdk.nativeToScVal(commentHash, { type: "string" }),
+      ),
+    ],
+    report,
+  );
 }
 
-export async function verifyReview(admin: string, reviewId: number): Promise<string> {
+export async function verifyReview(
+  admin: string,
+  reviewId: number,
+  report?: TxPhaseReporter,
+): Promise<string> {
   const contract = new Contract(CONTRACTS.reviewVerification);
-  return buildAndSend(admin, () => [
-    contract.call(
-      "verify_review",
-      StellarSdk.nativeToScVal(reviewId, { type: "u64" }),
-    ),
-  ]);
+  return buildAndSend(
+    admin,
+    () => [contract.call("verify_review", StellarSdk.nativeToScVal(reviewId, { type: "u64" }))],
+    report,
+  );
 }
 
 export async function acceptRelationship(
   actor: string,
   relationshipId: number,
+  report?: TxPhaseReporter,
 ): Promise<string> {
   const contract = new Contract(CONTRACTS.trustRelationship);
-  return buildAndSend(actor, () => [
-    contract.call(
-      "accept",
-      StellarSdk.nativeToScVal(actor, { type: "address" }),
-      StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
-    ),
-  ]);
+  return buildAndSend(
+    actor,
+    () => [
+      contract.call(
+        "accept",
+        StellarSdk.nativeToScVal(actor, { type: "address" }),
+        StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
+      ),
+    ],
+    report,
+  );
 }
 
 export async function completeRelationship(
   actor: string,
   relationshipId: number,
   qualityScore: number,
+  report?: TxPhaseReporter,
 ): Promise<string> {
   const contract = new Contract(CONTRACTS.trustRelationship);
-  return buildAndSend(actor, () => [
-    contract.call(
-      "complete",
-      StellarSdk.nativeToScVal(actor, { type: "address" }),
-      StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
-      StellarSdk.nativeToScVal(qualityScore, { type: "u32" }),
-    ),
-  ]);
+  return buildAndSend(
+    actor,
+    () => [
+      contract.call(
+        "complete",
+        StellarSdk.nativeToScVal(actor, { type: "address" }),
+        StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
+        StellarSdk.nativeToScVal(qualityScore, { type: "u32" }),
+      ),
+    ],
+    report,
+  );
 }
 
 export async function openDispute(
   actor: string,
   relationshipId: number,
   reason: string,
+  report?: TxPhaseReporter,
 ): Promise<string> {
   const contract = new Contract(CONTRACTS.trustRelationship);
-  return buildAndSend(actor, () => [
-    contract.call(
-      "open_dispute",
-      StellarSdk.nativeToScVal(actor, { type: "address" }),
-      StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
-      StellarSdk.nativeToScVal(reason, { type: "string" }),
-    ),
-  ]);
+  return buildAndSend(
+    actor,
+    () => [
+      contract.call(
+        "open_dispute",
+        StellarSdk.nativeToScVal(actor, { type: "address" }),
+        StellarSdk.nativeToScVal(relationshipId, { type: "u64" }),
+        StellarSdk.nativeToScVal(reason, { type: "string" }),
+      ),
+    ],
+    report,
+  );
 }
 
 export type RawEvent = {

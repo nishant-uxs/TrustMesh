@@ -1,3 +1,5 @@
+import { DEPLOYED_CONTRACTS } from "./contracts.config";
+
 export const NETWORK = {
   name: "TESTNET" as const,
   passphrase: "Test SDF Network ; September 2015",
@@ -6,15 +8,31 @@ export const NETWORK = {
   explorerBase: "https://stellar.expert/explorer/testnet",
 };
 
+function pickContract(envValue: string | undefined, fallback: string): string {
+  const trimmed = (envValue || "").trim();
+  if (trimmed.startsWith("C") && trimmed.length >= 56) return trimmed;
+  return fallback;
+}
+
 export const CONTRACTS = {
-  organizationRegistry:
-    process.env.NEXT_PUBLIC_ORGANIZATION_REGISTRY_ID || "",
-  trustRelationshipFactory:
-    process.env.NEXT_PUBLIC_TRUST_RELATIONSHIP_FACTORY_ID || "",
-  trustRelationship: process.env.NEXT_PUBLIC_TRUST_RELATIONSHIP_ID || "",
-  reputation: process.env.NEXT_PUBLIC_REPUTATION_ID || "",
-  reviewVerification: process.env.NEXT_PUBLIC_REVIEW_VERIFICATION_ID || "",
-  treasury: process.env.NEXT_PUBLIC_TREASURY_ID || "",
+  organizationRegistry: pickContract(
+    process.env.NEXT_PUBLIC_ORGANIZATION_REGISTRY_ID,
+    DEPLOYED_CONTRACTS.organizationRegistry,
+  ),
+  trustRelationshipFactory: pickContract(
+    process.env.NEXT_PUBLIC_TRUST_RELATIONSHIP_FACTORY_ID,
+    DEPLOYED_CONTRACTS.trustRelationshipFactory,
+  ),
+  trustRelationship: pickContract(
+    process.env.NEXT_PUBLIC_TRUST_RELATIONSHIP_ID,
+    DEPLOYED_CONTRACTS.trustRelationship,
+  ),
+  reputation: pickContract(process.env.NEXT_PUBLIC_REPUTATION_ID, DEPLOYED_CONTRACTS.reputation),
+  reviewVerification: pickContract(
+    process.env.NEXT_PUBLIC_REVIEW_VERIFICATION_ID,
+    DEPLOYED_CONTRACTS.reviewVerification,
+  ),
+  treasury: pickContract(process.env.NEXT_PUBLIC_TREASURY_ID, DEPLOYED_CONTRACTS.treasury),
 };
 
 export function contractsConfigured(): boolean {

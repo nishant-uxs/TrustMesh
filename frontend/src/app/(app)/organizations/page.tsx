@@ -74,7 +74,7 @@ export default function OrganizationsPage() {
     }
     const result = await runSignedAction(
       "register_organization",
-      () => registerOrganization(address, name, orgType, uri),
+      (report) => registerOrganization(address, name, orgType, uri, report),
       (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error, message: extra?.error }),
     );
     if (!result.ok) {

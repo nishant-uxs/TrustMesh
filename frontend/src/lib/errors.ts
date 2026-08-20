@@ -105,9 +105,28 @@ export function classifyError(err: unknown): AppError {
     );
   }
   if (
+    lower.includes("orgnotverified") ||
+    lower.includes("org not verified") ||
+    lower.includes("not verified")
+  ) {
+    return new AppError(
+      "ContractCallFailed",
+      "Both organizations must be verified before creating a relationship (admin verify).",
+      raw,
+    );
+  }
+  if (lower.includes("alreadyregistered") || lower.includes("already registered")) {
+    return new AppError(
+      "ContractCallFailed",
+      "This wallet already registered an organization on Testnet.",
+      raw,
+    );
+  }
+  if (
     lower.includes("contract") ||
     lower.includes("hosterror") ||
-    lower.includes("invoke")
+    lower.includes("invoke") ||
+    lower.includes("simulation failed")
   ) {
     return new AppError(
       "ContractCallFailed",

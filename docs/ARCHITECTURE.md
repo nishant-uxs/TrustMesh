@@ -28,4 +28,16 @@ Events use descriptive topic symbols (e.g. `OrganizationRegistered`) so the fron
 - `loadTrustGraph` uses a short TTL cache and coalesces in-flight RPC.
 - Reputation scores come from `get_reputation` only (no extra `get_trust_score` round trip).
 - Writes go through `runSignedAction` (analytics + monitoring + classified errors).
-- When contract IDs are missing, lists stay empty (no seed / fake balances).
+- Contract IDs default from `contracts.config.ts` / `public/contracts.json`; env vars override.
+- When IDs are missing, lists stay empty (no seed / fake balances).
+
+## Signed invoke path
+
+1. `assertWalletOnTestnet` (Freighter network details when available)
+2. `simulating` — `prepareTransaction` (Soroban simulation / assembly)
+3. `signing` — wallet signs XDR with Testnet passphrase
+4. `submitted` — `sendTransaction` returns hash
+5. Poll `getTransaction` until SUCCESS / FAILED / timeout
+6. Invalidate trust-graph cache on success
+
+UI surfaces these phases via `TxStatus` / `TxPanel`. Wrong-network shows a persistent banner in `AppShell`.

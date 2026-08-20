@@ -434,9 +434,46 @@ Orange Belt contract map: [`docs/ORANGE_BELT_CHECKLIST.md`](./docs/ORANGE_BELT_C
 - Empty-by-default UI — no fabricated balances or seed tables
 - Product analytics never persist full wallet addresses
 - Optional Sentry/PostHog keys live in env vars only
+- Frontend never asks for a secret key
+
+Policy: [`SECURITY.md`](./SECURITY.md) · ops: [`docs/OPERATIONS.md`](./docs/OPERATIONS.md)
+
+---
+
+## Known limitations
+
+- Freighter (or a wallet that can sign Soroban txs) is required to **submit** invokes. Other wallets may connect identity only.
+- Stellar RPC event history is retained for a limited window — `/activity` is a recent stream, not an archive.
+- One wallet can register one organization.
+- Product analytics, feedback notes, and monitoring incidents are local (plus optional remote keys) — not on-chain.
+- Factory `create_relationship` requires **both** organizations to be admin-verified first.
+- Wallet evidence under `docs/evidence/` uses **Testnet demo identities**, not organic users.
+
+---
+
+## Future roadmap
+
+- Multi-wallet organization membership
+- Durable off-chain indexer beyond RPC retention
+- Clearer “your org” highlighting when a wallet is connected
+- Optional PostHog / Sentry dashboards in production
+
+---
+
+## Docs
+
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
+- [`docs/TESTING.md`](./docs/TESTING.md)
+- [`docs/OPERATIONS.md`](./docs/OPERATIONS.md)
+- [`docs/VERCEL_DEPLOY.md`](./docs/VERCEL_DEPLOY.md)
+- [`docs/DEMO_VIDEO.md`](./docs/DEMO_VIDEO.md)
+- [`docs/SUBMISSION.md`](./docs/SUBMISSION.md)
+- [`docs/evidence/`](./docs/evidence/)
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- [`SECURITY.md`](./SECURITY.md)
 
 ---
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE). Contributions: [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+MIT — see [`LICENSE`](./LICENSE).

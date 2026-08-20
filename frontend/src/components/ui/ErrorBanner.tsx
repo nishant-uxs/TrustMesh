@@ -21,6 +21,7 @@ export function ErrorBanner({
   const [open, setOpen] = useState(false);
   const [funding, setFunding] = useState(false);
   const canFund = error.kind === "AccountNotFunded" && Boolean(address);
+  const wrongNetwork = error.kind === "WrongNetwork";
 
   async function onFund() {
     if (!address) return;
@@ -49,6 +50,12 @@ export function ErrorBanner({
             <Button className="mt-3" size="sm" loading={funding} onClick={() => void onFund()}>
               Add free Testnet funds
             </Button>
+          )}
+          {wrongNetwork && (
+            <p className="mt-3 text-xs text-slate">
+              Open your wallet extension → Network → <strong>Testnet</strong>, then retry the
+              action.
+            </p>
           )}
           {error.technical && (
             <button

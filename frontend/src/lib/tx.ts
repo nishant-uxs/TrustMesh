@@ -5,15 +5,22 @@ import { track } from "./analyticsClient";
 import { reportError } from "./monitoringClient";
 import type { TxPhase } from "./types";
 
+export type PhaseSetter = (phase: TxPhase, extra?: { hash?: string; error?: string }) => void;
+
+/**
+ * Runs a signed Testnet action with shared analytics + error classification.
+ * Pass the phase reporter into `buildAndSend` via your contract helper so the UI
+ * can show simulating → signing → submitted → success|failed.
+ */
 export async function runSignedAction(
   action: string,
-  execute: () => Promise<string>,
-  setPhase?: (phase: TxPhase, extra?: { hash?: string; error?: string }) => void,
+  execute: (report: PhaseSetter) => Promise<string>,
+  setPhase?: PhaseSetter,
 ): Promise<{ ok: true; hash: string } | { ok: false; error: AppError }> {
   track("transaction_started", { action });
-  setPhase?.("signing");
+  const report: PhaseSetter = (phase, extra) => setPhase?.(phase, extra);
   try {
-    const hash = await execute();
+    const hash = await execute(report);
     track("transaction_succeeded", { action });
     setPhase?.("success", { hash });
     return { ok: true, hash };

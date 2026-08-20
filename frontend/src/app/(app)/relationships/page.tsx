@@ -83,7 +83,7 @@ export default function RelationshipsPage() {
     }
     const result = await runSignedAction(
       "create_relationship",
-      () => createRelationship(wallet, a, b, title),
+      (report) => createRelationship(wallet, a, b, title, report),
       (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
     );
     if (!result.ok) {
@@ -106,10 +106,12 @@ export default function RelationshipsPage() {
     if (!wallet) return;
     const result = await runSignedAction(
       action,
-      async () => {
-        if (action === "accept") return acceptRelationship(wallet, relationshipId);
-        if (action === "complete") return completeRelationship(wallet, relationshipId, quality);
-        return openDispute(wallet, relationshipId, disputeReason || "Scope disagreement");
+      async (report) => {
+        if (action === "accept") return acceptRelationship(wallet, relationshipId, report);
+        if (action === "complete") {
+          return completeRelationship(wallet, relationshipId, quality, report);
+        }
+        return openDispute(wallet, relationshipId, disputeReason || "Scope disagreement", report);
       },
       (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
     );

@@ -62,7 +62,7 @@ export default function ReviewsPage() {
     }
     const result = await runSignedAction(
       "verify_review",
-      () => verifyReview(address, reviewId),
+      (report) => verifyReview(address, reviewId, report),
       (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
     );
     if (!result.ok) {
@@ -95,7 +95,7 @@ export default function ReviewsPage() {
     }
     const result = await runSignedAction(
       "submit_review",
-      () => submitReview(address, rOrg, vOrg, relId, rating, commentHash),
+      (report) => submitReview(address, rOrg, vOrg, relId, rating, commentHash, report),
       (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
     );
     if (!result.ok) {

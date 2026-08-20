@@ -80,7 +80,14 @@ export default function OnboardingPage() {
     }
     const result = await runSignedAction(
       "register_organization",
-      () => registerOrganization(address, name.trim(), role, `trustmesh://org/${encodeURIComponent(name.trim())}`),
+      (report) =>
+        registerOrganization(
+          address,
+          name.trim(),
+          role,
+          `trustmesh://org/${encodeURIComponent(name.trim())}`,
+          report,
+        ),
       (phase, extra) => setTx({ phase, hash: extra?.hash, error: extra?.error }),
     );
     if (!result.ok) {
