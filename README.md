@@ -74,12 +74,36 @@ Built as a production MVP on the existing Orange Belt contract foundation.
 <p align="center"><em>Settings — network, 6 contract IDs, light/dark theme</em></p>
 
 <p align="center">
+  <img src="./docs/screenshots/analytics.png" alt="Analytics with live Testnet counts" width="720" />
+</p>
+
+<p align="center"><em>Analytics — live Testnet org/relationship counts; product events are this-browser only (empty until recorded)</em></p>
+
+<p align="center">
+  <img src="./docs/screenshots/monitoring.png" alt="Settings monitoring local-only" width="720" />
+</p>
+
+<p align="center"><em>Monitoring — Sentry/PostHog local-only unless env keys are set; no fake incidents</em></p>
+
+<p align="center">
+  <img src="./docs/screenshots/feedback-summary.png" alt="In-app feedback owner summary" width="720" />
+</p>
+
+<p align="center"><em>Feedback — demo-tester notes stored in this browser (not organic remote users)</em></p>
+
+<p align="center">
   <img src="./docs/screenshots/ci-green-run.png" alt="Green GitHub Actions CI run" width="720" />
 </p>
 
 <p align="center"><em>CI/CD — Contracts (test + WASM) → Frontend (lint/typecheck/test/build) → Deploy gate</em></p>
 
 Full deployment record: [`deployments/TRANSACTIONS.md`](./deployments/TRANSACTIONS.md) · env: [`deployments/testnet.env`](./deployments/testnet.env)
+
+Green Belt evidence (Testnet demo identities, not organic users):
+
+- Wallet interactions: [`docs/evidence/WALLET_INTERACTIONS.md`](./docs/evidence/WALLET_INTERACTIONS.md)
+- End-to-end demo activity: [`docs/evidence/DEMO_ACTIVITY.md`](./docs/evidence/DEMO_ACTIVITY.md)
+- Feedback summary: [`docs/evidence/FEEDBACK_SUMMARY.md`](./docs/evidence/FEEDBACK_SUMMARY.md)
 
 ---
 
@@ -349,7 +373,7 @@ Recording script: [`docs/DEMO_VIDEO.md`](./docs/DEMO_VIDEO.md)
 
 Suggested 90s flow: landing → Get started → connect wallet → Friendbot (optional) → choose role → publish organization (sign) → public receipt → start a relationship.
 
-Green Belt evidence template (real links only): [`docs/GREEN_BELT_EVIDENCE.md`](./docs/GREEN_BELT_EVIDENCE.md)
+Green Belt evidence template: [`docs/GREEN_BELT_EVIDENCE.md`](./docs/GREEN_BELT_EVIDENCE.md) · filled artifacts under [`docs/evidence/`](./docs/evidence/)
 
 ---
 

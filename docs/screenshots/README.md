@@ -9,6 +9,9 @@
 | `desktop-settings.png` | Settings / contract IDs / theme |
 | `desktop-relationships.png` | Relationships lifecycle UI |
 | `ci-green-run.png` | Green GitHub Actions CI run |
+| `analytics.png` | Analytics against live Testnet RPC |
+| `monitoring.png` | Settings monitoring (Sentry/PostHog local-only) |
+| `feedback-summary.png` | In-app feedback owner summary (demo testers) |
 
 Capture locally:
 
